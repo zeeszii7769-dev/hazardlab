@@ -146,7 +146,7 @@
 <body>
     <nav class="navbar">
         <div class="logo"><img src="hazardlab-logo.png" alt="HazardLab logo" class="logo-icon" width="37" height="32">HazardLab</div>
-        <div class="search-bar"><input type="text" id="searchInput" placeholder="ค้นหาตลาดคาดการณ์..." oninput="searchCards()"></div>
+      <div class="search-bar"><input type="text" id="searchInput" name="market_search_box" autocomplete="off" placeholder="ค้นหาตลาดคาดการณ์..." oninput="searchCards()"></div>
 
           <div class="nav-buttons" style="align-items: center;">
             <div style="background: #1c2028; border: 1px solid #2c323d; padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: bold; color: #10b981;">
@@ -974,15 +974,16 @@ setInterval(window.loadSupabaseMarkets, 15000);
             const { data } = await sb.from('profiles').select('*').eq('id', sbUser.id).single();
             if (data) {
                 sbProfile = data;
-                const balEl = document.getElementById('userBalance');
-                if (balEl) balEl.innerText = '$' + Number(data.balance).toFixed(2);
-                const navArea = document.getElementById('authButtonsArea');
-                if (navArea) {
-                    navArea.innerHTML = `
-                        <span style="color:#10b981;font-size:13px;font-weight:bold;">👤 ${data.display_name} ($${Number(data.balance).toFixed(2)})</span>
-                        <button class="btn-login" style="color:#ef4444;" onclick="sbLogout()">ออก</button>
-                    `;
-                }
+                       const balEl = document.getElementById('userBalance');
+        if (balEl) balEl.innerText = Number(data.balance).toFixed(2);
+        const authBtn = document.getElementById('authBtn');
+        if (authBtn) {
+          authBtn.outerHTML = `
+            <span style="color:#10b981;font-size:13px;font-weight:bold;">👤 ${data.display_name}</span>
+            <button class="btn-login" style="color:#ef4444;font-size:12px;padding:6px 10px;" onclick="sbLogout()">ออก</button>
+          `;
+        }
+
             }
         }
         loadRealLeaderboard();
