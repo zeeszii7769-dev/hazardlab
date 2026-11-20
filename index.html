@@ -917,6 +917,43 @@
 
     let sbUser = null;
     let sbProfile = null;
+      // ดึงหัวข้อทายผลที่แอดมินสร้างจากตาราง markets มาแสดงบนหน้าหลัก
+  async function loadSupabaseMarkets() {
+    const grid = document.getElementById('dynamicMarketGrid');
+    if (!grid) return;
+
+    const { data: markets, error } = await sb
+      .from('markets')
+      .select('*')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false });
+
+    if (error || !markets || markets.length === 0) {
+      grid.innerHTML = '';
+      return;
+    }
+
+    grid.innerHTML = markets.map(m => {
+      const yesPct = Number(m.yes_percent) || 50;
+      const noPct = 100 - yesPct;
+      const safeTitle = m.title.replace(/'/g, "\\'");
+
+      return `
+        <div class="mini-card" data-category="${m.category}" style="border-color: #2d7ff9;">
+          <div style="font-size: 11px; color: #2d7ff9; font-weight: bold; margin-bottom: 6px;">★ ตลาดใหม่จาก HazardLab</div>
+          <h4>${m.title}</h4>
+          <div class="vote-buttons">
+            <button class="btn-yes" onclick="openTradeModal('${safeTitle}', 'Yes', ${yesPct})">Yes ${yesPct}%</button>
+            <button class="btn-no" onclick="openTradeModal('${safeTitle}', 'No', ${noPct})">No ${noPct}%</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  loadSupabaseMarkets();
+  setInterval(loadSupabaseMarkets, 15000);
+
 
     async function refreshSupabaseUser() {
         const { data: { session } } = await sb.auth.getSession();
