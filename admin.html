@@ -480,8 +480,68 @@
     }
 
     window.addEventListener('DOMContentLoaded', loadAllSupabaseBets);
+      // โหลดข้อความ Feedback ทั้งหมดมาแสดงในหน้าแอดมิน
+  window.loadAdminFeedbacks = async function() {
+    const listDiv = document.getElementById('adminFeedbackList');
+    if (!listDiv) return;
+
+    const { data: feedbacks, error } = await sb
+      .from('feedbacks')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error || !feedbacks || feedbacks.length === 0) {
+      listDiv.innerHTML = '<p style="color: #8c95a6; font-size: 13px;">ยังไม่มีข้อความจากลูกค้า</p>';
+      return;
+    }
+
+    listDiv.innerHTML = feedbacks.map(fb => {
+      const isDone = fb.status === 'resolved';
+      const dateStr = new Date(fb.created_at).toLocaleString('th-TH');
+      return `
+        <div style="background: #13161b; border: 1px solid ${isDone ? '#10b981' : '#2c323d'}; border-radius: 8px; padding: 15px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; flex-wrap: wrap; gap: 6px;">
+            <span><strong style="color: #2d7ff9;">[${fb.topic}]</strong> โดย: <strong>${fb.sender_name}</strong> (${dateStr})</span>
+            <span style="color: ${isDone ? '#10b981' : '#f59e0b'}; font-weight: bold;">
+              ${isDone ? '✅ ดำเนินการแล้ว' : '⏳ รอตรวจสอบ'}
+            </span>
+          </div>
+          <p style="font-size: 14px; color: #e5e7eb; margin-bottom: 12px; white-space: pre-wrap;">${fb.message}</p>
+          <div style="display: flex; gap: 8px;">
+            ${!isDone ? `<button onclick="markFeedbackResolved('${fb.id}')" style="background: #10b981; color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;">✓ ทำเครื่องหมายว่าแก้ไข/รับทราบแล้ว</button>` : ''}
+            <button onclick="deleteFeedback('${fb.id}')" style="background: rgba(239,68,68,0.2); color: #ef4444; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">ลบข้อความ</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  };
+
+  // กดอัปเดตสถานะว่าจัดการแล้ว
+  window.markFeedbackResolved = async function(id) {
+    const { error } = await sb.from('feedbacks').update({ status: 'resolved' }).eq('id', id);
+    if (!error) loadAdminFeedbacks();
+  };
+
+  // ลบข้อความที่ไม่ต้องการ
+  window.deleteFeedback = async function(id) {
+    if (!confirm('ต้องการลบข้อความนี้ใช่หรือไม่?')) return;
+    const { error } = await sb.from('feedbacks').delete().eq('id', id);
+    if (!error) loadAdminFeedbacks();
+  };
+
+  window.addEventListener('DOMContentLoaded', loadAdminFeedbacks);
+
 })();
 </script>
+<div style="max-width: 900px; margin: 20px auto 50px auto; padding: 0 20px;">
+  <div style="background: #1c2028; border: 1px solid #2c323d; border-radius: 12px; padding: 25px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h3 style="color: #2d7ff9; margin: 0;">📩 ข้อความและข้อเสนอแนะจากลูกค้า (Feedback)</h3>
+      <button onclick="loadAdminFeedbacks()" style="background: #2c323d; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">🔄 รีเฟรช</button>
+    </div>
+    <div id="adminFeedbackList">กำลังโหลดข้อมูล...</div>
+  </div>
+</div>
 
 </body>
 </html>
