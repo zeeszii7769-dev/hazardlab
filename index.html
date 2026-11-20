@@ -919,7 +919,12 @@
 (function() {
     const SUPABASE_URL = 'https://yzxaylzwgtpzqhfxmjqs.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_uGceFDQrnJP2ZGPoB_0NVw_TZgskFHU';
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true
+        }
+    });
 
     let sbUser = null;
     let sbProfile = null;
@@ -1135,10 +1140,18 @@ setInterval(window.loadSupabaseMarkets, 15000);
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-        localStorage.removeItem('currentUser');
+      
         refreshSupabaseUser();
         loadMyBetsHistory();
+    });  
+    sb.auth.onAuthStateChange((event, session) => {
+        if (session && session.user) {
+            sbUser = session.user;
+            refreshSupabaseUser();
+            loadMyBetsHistory();
+        }
     });
+
       // เปิด-ปิดหน้าต่าง Feedback
   window.openFeedbackModal = function() {
     document.getElementById('feedbackModal').style.display = 'flex';
