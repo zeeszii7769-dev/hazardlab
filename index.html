@@ -684,13 +684,19 @@
                 payout: payout.toFixed(2)
             });
 
-                     usersDB[currentUser].balance = balance;
+              if (currentUser && usersDB[currentUser]) {
+            usersDB[currentUser].balance = balance;
             usersDB[currentUser].history = tradeHistory;
             localStorage.setItem('usersDB', JSON.stringify(usersDB));
+        }
 
 
             updateUI();
             closeTradeModal();
+                        if (typeof window.loadSupabaseMarkets === 'function') {
+            window.loadSupabaseMarkets();
+        }
+
         }
 
 
@@ -918,7 +924,7 @@
     let sbUser = null;
     let sbProfile = null;
       // ดึงหัวข้อทายผลที่แอดมินสร้างจากตาราง markets มาแสดงบนหน้าหลัก
-  async function loadSupabaseMarkets() {
+  window.loadSupabaseMarkets = async function() {
     const grid = document.getElementById('dynamicMarketGrid');
     if (!grid) return;
 
@@ -951,8 +957,9 @@
     }).join('');
   }
 
-  loadSupabaseMarkets();
-  setInterval(loadSupabaseMarkets, 15000);
+ window.loadSupabaseMarkets();
+setInterval(window.loadSupabaseMarkets, 15000);
+
 
 
     async function refreshSupabaseUser() {
