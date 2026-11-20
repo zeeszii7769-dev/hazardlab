@@ -1139,8 +1139,74 @@ setInterval(window.loadSupabaseMarkets, 15000);
         refreshSupabaseUser();
         loadMyBetsHistory();
     });
+      // เปิด-ปิดหน้าต่าง Feedback
+  window.openFeedbackModal = function() {
+    document.getElementById('feedbackModal').style.display = 'flex';
+  };
+  window.closeFeedbackModal = function() {
+    document.getElementById('feedbackModal').style.display = 'none';
+  };
+
+  // ส่งข้อมูล Feedback ลงตาราง Supabase
+  window.submitUserFeedback = async function() {
+    const topic = document.getElementById('fbTopic').value;
+    const senderInput = document.getElementById('fbSender').value.trim();
+    const message = document.getElementById('fbMessage').value.trim();
+
+    if (!message) {
+      alert('กรุณาพิมพ์รายละเอียดข้อความก่อนกดส่งครับ');
+      return;
+    }
+
+    const senderName = senderInput || (sbProfile ? sbProfile.display_name : 'ผู้ใช้งานทั่วไป');
+
+    const { error } = await sb.from('feedbacks').insert([{
+      user_id: sbUser ? sbUser.id : null,
+      sender_name: senderName,
+      topic: topic,
+      message: message
+    }]);
+
+    if (error) {
+      alert('❌ ส่งข้อความไม่สำเร็จ: ' + error.message);
+    } else {
+      alert('✅ ส่งข้อความถึงแอดมินเรียบร้อย! ขอบคุณสำหรับคำแนะนำครับ');
+      document.getElementById('fbMessage').value = '';
+      closeFeedbackModal();
+    }
+  };
+
 })();
 </script>
+<!-- ปุ่มลอย Feedback ติดมุมขวาล่างตลอดเวลา -->
+<button onclick="openFeedbackModal()" style="position: fixed; bottom: 24px; right: 24px; background: #2d7ff9; color: #fff; border: none; border-radius: 50px; padding: 12px 20px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(45, 127, 249, 0.4); z-index: 999; display: flex; align-items: center; gap: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+  💬 แจ้งปัญหา / เสนอหัวข้อ
+</button>
+
+<!-- หน้าต่างป๊อปอัปสำหรับพิมพ์ Feedback -->
+<div class="modal-overlay" id="feedbackModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="font-size: 17px;">💬 เสนอหัวข้อ / แจ้งปัญหา</h3>
+      <button class="close-btn" onclick="closeFeedbackModal()">✕</button>
+    </div>
+    
+    <label style="font-size: 13px; color: #8c95a6;">เลือกหัวข้อที่ต้องการติดต่อ</label>
+    <select id="fbTopic" class="modal-input" style="font-size: 14px;">
+      <option value="เสนอหัวข้อทายผลใหม่">💡 เสนอหัวข้อทายผลใหม่</option>
+      <option value="แจ้งปัญหา / บั๊ก">🐛 แจ้งปัญหา / บั๊ก</option>
+      <option value="ข้อเสนอแนะอื่นๆ">📝 ข้อเสนอแนะอื่นๆ</option>
+    </select>
+
+    <label style="font-size: 13px; color: #8c95a6;">ชื่อของคุณ (ไม่บังคับ)</label>
+    <input type="text" id="fbSender" class="modal-input" placeholder="ระบุชื่อเล่นของคุณ..." style="font-size: 14px;">
+
+    <label style="font-size: 13px; color: #8c95a6;">รายละเอียดข้อความ</label>
+    <textarea id="fbMessage" rows="3" class="modal-input" placeholder="พิมพ์รายละเอียดที่ต้องการแจ้งทีมงาน..." style="font-size: 14px; resize: vertical;"></textarea>
+
+    <button class="btn-confirm" onclick="submitUserFeedback()">ส่งข้อความถึงแอดมิน</button>
+  </div>
+</div>
 
 </body>
 </html>
