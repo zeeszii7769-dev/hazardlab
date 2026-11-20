@@ -907,7 +907,7 @@
     });
 })();
 </script>
-<!-- เชื่อมต่อฐานข้อมูลกลาง Supabase สำหรับหน้าเว็บหลัก -->
+<!-- เชื่อมต่อฐานข้อมูลกลาง Supabase สำหรับหน้าเว็บหลัก (อัปเดตปลดล็อกปุ่มสมบูรณ์) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function() {
@@ -917,8 +917,8 @@
 
     let sbUser = null;
     let sbProfile = null;
+    let currentAuthMode = 'login';
 
-    // 1. ตรวจสอบสถานะล็อกอินและดึงยอดเงินจากฐานข้อมูลจริง
     async function refreshSupabaseUser() {
         const { data: { session } } = await sb.auth.getSession();
         if (session && session.user) {
@@ -942,15 +942,25 @@
 
     window.sbLogout = async function() {
         await sb.auth.signOut();
+        localStorage.removeItem('currentUser');
         location.reload();
     };
 
-    // 2. เชื่อมปุ่มสมัครสมาชิก / เข้าสู่ระบบเข้ากับ Supabase
-    const oldHandleAuth = window.handleAuth;
-    window.handleAuth = async function() {
+    // บังคับเปลี่ยนการทำงานของปุ่มเปิดหน้าต่าง Login / Register ใหม่ทั้งหมด
+    window.openAuthModal = function(mode) {
+        currentAuthMode = mode || 'login';
+        const modal = document.getElementById('authModal');
+        const title = document.getElementById('authModalTitle');
+        const btn = modal ? modal.querySelector('button[onclick*="handleAuth"], .btn-submit, button:last-of-type') : null;
+        if (title) title.innerText = currentAuthMode === 'register' ? 'สมัครสมาชิกใหม่ (รับโบนัส $1,000)' : 'เข้าสู่ระบบ';
+        if (btn) btn.innerText = currentAuthMode === 'register' ? 'ยืนยันสมัครสมาชิก' : 'เข้าสู่ระบบ';
+        if (modal) modal.style.display = 'flex';
+    };
+
+    window.handleAuth = async function(e) {
+        if (e) e.preventDefault();
         const userInp = document.getElementById('authUsernameInput');
         const passInp = document.getElementById('authPasswordInput');
-        const titleEl = document.getElementById('authModalTitle');
         if (!userInp || !passInp) return;
 
         const rawUser = userInp.value.trim();
@@ -960,17 +970,17 @@
             return;
         }
 
-        const email = rawUser.includes('@') ? rawUser : `${rawUser.toLowerCase().replace(/[^a-z0-9]/g, '')}@hazardlab.app`;
-        const isRegister = titleEl && titleEl.innerText.includes('สมัคร');
+        const safePrefix = rawUser.toLowerCase().replace(/[^a-z0-9]/g, '') || ('user' + Date.now());
+        const email = rawUser.includes('@') ? rawUser : `${safePrefix}@hazardlab.app`;
 
-        if (isRegister) {
-            const { data, error } = await sb.auth.signUp({
+        if (currentAuthMode === 'register') {
+            const { error } = await sb.auth.signUp({
                 email,
                 password,
                 options: { data: { display_name: rawUser } }
             });
             if (error) return alert('สมัครไม่สำเร็จ: ' + error.message);
-            alert('สมัครสมาชิกสำเร็จ! ได้รับโบนัสเริ่มต้น $1,000.00');
+            alert('✅ สมัครสมาชิกสำเร็จ! ได้รับโบนัสเริ่มต้น $1,000.00');
         } else {
             const { error } = await sb.auth.signInWithPassword({ email, password });
             if (error) return alert('เข้าสู่ระบบไม่สำเร็จ: ' + error.message);
@@ -980,12 +990,10 @@
         refreshSupabaseUser();
     };
 
-    // 3. บันทึกรายการทายผลขึ้นฐานข้อมูลกลางเมื่อกดยืนยัน
-    const oldConfirmTrade = window.confirmTrade;
     window.confirmTrade = async function() {
         if (!sbUser || !sbProfile) {
             alert('กรุณาเข้าสู่ระบบหรือสมัครสมาชิกก่อนวางเดิมพัน');
-            if (typeof openAuthModal === 'function') openAuthModal('login');
+            window.openAuthModal('login');
             return;
         }
 
@@ -1024,7 +1032,6 @@
         refreshSupabaseUser();
     };
 
-    // 4. อัปเดตตาราง Leaderboard จากผู้เล่นจริงทั้งระบบ
     async function loadRealLeaderboard() {
         const lb = document.getElementById('leaderboardList');
         if (!lb) return;
@@ -1039,9 +1046,19 @@
         }
     }
 
-    window.addEventListener('DOMContentLoaded', refreshSupabaseUser);
+    window.addEventListener('DOMContentLoaded', () => {
+        localStorage.removeItem('currentUser');
+        const authModal = document.getElementById('authModal');
+        if (authModal) {
+            const submitBtn = authModal.querySelector('button[onclick]');
+            if (submitBtn) submitBtn.onclick = window.handleAuth;
+        }
+        refreshSupabaseUser();
+    });
 })();
 </script>
+
+
 
 </body>
 </html>
