@@ -275,5 +275,84 @@
             `).join('');
         }
     </script>
+    <script>
+// ซิงก์รายการตลาดเรียลไทม์จาก Polymarket ให้ตรงกับหน้าเว็บหลัก
+(function() {
+    let hiddenIds = JSON.parse(localStorage.getItem('hiddenPolymarketIds')) || [];
+    let pinnedId = localStorage.getItem('pinnedPolymarketId') || '';
+
+    window.toggleHidePolymarket = function(id) {
+        if (hiddenIds.includes(id)) {
+            hiddenIds = hiddenIds.filter(item => item !== id);
+        } else {
+            hiddenIds.push(id);
+        }
+        localStorage.setItem('hiddenPolymarketIds', JSON.stringify(hiddenIds));
+        loadAdminPolymarket();
+    };
+
+    window.togglePinPolymarket = function(id) {
+        pinnedId = (pinnedId === id) ? '' : id;
+        localStorage.setItem('pinnedPolymarketId', pinnedId);
+        loadAdminPolymarket();
+    };
+
+    async function loadAdminPolymarket() {
+        let container = document.getElementById('polymarketAdminSection');
+        if (!container) {
+            const target = document.querySelector('.container') || document.body;
+            container = document.createElement('div');
+            container.id = 'polymarketAdminSection';
+            container.style.cssText = 'margin-top: 30px; background: #1c2028; border: 1px solid #2c323d; border-radius: 12px; padding: 20px;';
+            target.appendChild(container);
+        }
+
+        container.innerHTML = '<h3 style="margin-bottom:15px; color:#10b981;">🟢 ตลาดเรียลไทม์จาก Polymarket (ซิงก์ตรงกับหน้าเว็บหลัก)</h3><p style="color:#8c95a6; font-size:13px;">กำลังโหลดรายการ...</p>';
+
+        try {
+            const res = await fetch('https://gamma-api.polymarket.com/events?closed=false&limit=13&order=volume&ascending=false');
+            const events = await res.json();
+
+            const rowsHtml = events.map(ev => {
+                const isHidden = hiddenIds.includes(String(ev.id));
+                const isPinned = (pinnedId === String(ev.id));
+                const m = (ev.markets && ev.markets[0]) || {};
+                let prob = 50;
+                try {
+                    const p = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices;
+                    if (Array.isArray(p) && p.length > 0) prob = Math.round(parseFloat(p[0]) * 100);
+                } catch (e) {}
+
+                return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:#232832; padding:12px 16px; border-radius:8px; margin-bottom:10px; opacity:${isHidden ? '0.5' : '1'}; border: 1px solid ${isPinned ? '#f59e0b' : 'transparent'};">
+                        <div>
+                            <strong style="color:#fff;">${ev.title}</strong>
+                            <div style="font-size:12px; color:#8c95a6; margin-top:4px;">ราคาปัจจุบัน: Yes ${prob}% | No ${100 - prob}% ${isPinned ? '• <span style="color:#f59e0b;">📌 ปักหมุดการ์ดเด่น</span>' : ''} ${isHidden ? '• <span style="color:#ef4444;">🚫 ซ่อนอยู่</span>' : ''}</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="togglePinPolymarket('${ev.id}')" style="background:${isPinned ? '#f59e0b' : '#2c323d'}; color:${isPinned ? '#000' : '#fff'}; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                                ${isPinned ? 'ยกเลิกปักหมุด' : '📌 ปักหมุดเด่น'}
+                            </button>
+                            <button onclick="toggleHidePolymarket('${ev.id}')" style="background:${isHidden ? '#10b981' : '#ef4444'}; color:${isHidden ? '#000' : '#fff'}; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">
+                                ${isHidden ? '👁️ แสดงบนเว็บ' : '🚫 ซ่อน'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <h3 style="margin-bottom:15px; color:#10b981;">🟢 ตลาดเรียลไทม์จาก Polymarket (${events.length} รายการล่าสุด)</h3>
+                ${rowsHtml}
+            `;
+        } catch (err) {
+            container.innerHTML = '<p style="color:#ef4444;">ไม่สามารถโหลดข้อมูลจาก Polymarket ได้ชั่วคราว</p>';
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadAdminPolymarket);
+})();
+</script>
+
 </body>
 </html>
