@@ -937,6 +937,7 @@
             }
         }
         loadRealLeaderboard();
+        loadMyBetsHistory();
     }
 
     window.sbLogout = async function() {
@@ -1046,10 +1047,53 @@
             `).join('');
         }
     }
+    // 5. ดึงประวัติการทายผลของผู้เล่นจากฐานข้อมูลจริงมาแสดง
+    async function loadMyBetsHistory() {
+        let histBox = document.getElementById('betHistoryList') || document.getElementById('historyList');
+        if (!histBox) {
+            const headings = Array.from(document.querySelectorAll('h2, h3, div'));
+            const titleEl = headings.find(el => el.innerText && el.innerText.includes('ประวัติการทายผลของฉัน') && el.children.length === 0);
+            if (titleEl && titleEl.parentElement) {
+                histBox = titleEl.parentElement.querySelector('div:last-child') || titleEl.nextElementSibling;
+            }
+        }
+        if (!histBox || !sbUser) return;
+
+        const { data: myBets } = await sb.from('bets')
+            .select('*')
+            .eq('user_id', sbUser.id)
+            .order('created_at', { ascending: false });
+
+        if (!myBets || myBets.length === 0) {
+            histBox.innerHTML = '<p style="color:#8c95a6;font-size:13px;">ยังไม่มีรายการทายผล ลองกดปุ่ม Yes หรือ No ด้านบนเพื่อเริ่มทายผลได้เลย!</p>';
+            return;
+        }
+
+        histBox.innerHTML = myBets.map(b => {
+            const statusText = b.status === 'win'
+                ? '<span style="color:#10b981;font-weight:bold;">🏆 ชนะ (+$' + Number(b.payout).toFixed(2) + ')</span>'
+                : b.status === 'lose'
+                ? '<span style="color:#ef4444;font-weight:bold;">❌ แพ้</span>'
+                : '<span style="color:#f59e0b;font-weight:bold;">⏳ รอตัดสินผล</span>';
+
+            return `
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 0;border-bottom:1px solid #262b34;font-size:13px;">
+                    <div>
+                        <strong style="color:#fff;">${b.market_title}</strong>
+                        <span style="margin-left:8px;color:${b.choice === 'Yes' ? '#10b981' : '#ef4444'};font-weight:bold;">[${b.choice} @ ${b.percent}%]</span>
+                    </div>
+                    <div style="color:#d1d5db;">
+                        ลงเงิน: <strong>$${Number(b.amount).toFixed(2)}</strong> • รับถ้าถูก: <strong style="color:#10b981;">$${Number(b.payout).toFixed(2)}</strong> • ${statusText}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('currentUser');
         refreshSupabaseUser();
+        loadMyBetsHistory();
     });
 })();
 </script>
