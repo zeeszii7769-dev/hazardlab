@@ -160,18 +160,19 @@
 
     </nav>
 
-    <div class="categories">
-        <a href="#" class="active">มาแรง</a>
-        <a href="#">ข่าวด่วน</a>
-        <a href="#">ใหม่</a>
-        <a href="#">การเมือง</a>
-        <a href="#">กีฬา</a>
-        <a href="#">Crypto</a>
-        <a href="#">Esports</a>
-        <a href="#">การเงิน</a>
-        <a href="#">เทคโนโลยี</a>
-        <a href="#">วัฒนธรรม</a>
+      <div class="categories">
+        <a href="javascript:void(0)" class="active" onclick="filterTopNav('all', this)">มาแรง</a>
+        <a href="javascript:void(0)" onclick="filterTopNav('all', this)">ข่าวด่วน</a>
+        <a href="javascript:void(0)" onclick="filterTopNav('new', this)">ใหม่</a>
+        <a href="javascript:void(0)" onclick="filterTopNav('politics', this)">การเมือง</a>
+        <a href="javascript:void(0)" onclick="filterTopNav('game', this)">กีฬา</a>
+        <a href="javascript:void(0)" onclick="filterTopNav('finance', this)">Crypto</a>
+        <a href="javascript:void(0)" onclick="filterTopNav('game', this)">Esports</a>
+        <a href="javascript:void(0)" onclick="filterTopNav('finance', this)">การเงิน</a>
+        <a href="javascript:void(0)" onclick="filterTopNav('tech', this)">เทคโนโลยี</a>
+        <a href="javascript:void(0)" onclick="filterTopNav('all', this)">วัฒนธรรม</a>
     </div>
+
 
     <div class="container">
         <div class="featured-card">
@@ -1188,6 +1189,66 @@ setInterval(window.loadSupabaseMarkets, 15000);
       document.getElementById('fbMessage').value = '';
       closeFeedbackModal();
     }
+  };
+  // ระบบค้นหาและตัวกรองแบบครบวงจร (คุมทั้งการ์ดเดิมและการ์ดใหม่จาก Supabase)
+  let currentFilterCat = 'all';
+
+  function refreshAllFilters() {
+    const keyword = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+    const hideGame = document.getElementById('hideGame')?.checked || false;
+    const hideFinance = document.getElementById('hideFinance')?.checked || false;
+
+    const allCards = document.querySelectorAll('#dynamicMarketGrid .mini-card, #marketGrid .mini-card');
+
+    allCards.forEach(card => {
+      const title = (card.querySelector('h4')?.innerText || '').toLowerCase();
+      const cat = card.getAttribute('data-category') || 'all';
+      const isSupabaseCard = card.closest('#dynamicMarketGrid') !== null;
+
+      let isVisible = true;
+
+      if (keyword && !title.includes(keyword)) {
+        isVisible = false;
+      }
+
+      if (currentFilterCat === 'new') {
+        if (!isSupabaseCard) isVisible = false;
+      } else if (currentFilterCat !== 'all' && cat !== currentFilterCat) {
+        isVisible = false;
+      }
+
+      if (hideGame && cat === 'game') isVisible = false;
+      if (hideFinance && cat === 'finance') isVisible = false;
+
+      card.style.display = isVisible ? '' : 'none';
+    });
+  }
+
+  window.searchCards = function() {
+    refreshAllFilters();
+  };
+
+  window.filterCards = function(category, el) {
+    currentFilterCat = category;
+    document.querySelectorAll('.filter-tags .tag').forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    refreshAllFilters();
+  };
+
+  window.filterTopNav = function(category, el) {
+    currentFilterCat = category;
+    document.querySelectorAll('.categories a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
+    
+    document.querySelectorAll('.filter-tags .tag').forEach(t => t.classList.remove('active'));
+    const matchTag = document.querySelector(`.filter-tags .tag[onclick*="'${category}'"]`);
+    if (matchTag) matchTag.classList.add('active');
+
+    refreshAllFilters();
+  };
+
+  window.applyToggles = function() {
+    refreshAllFilters();
   };
 
 })();
