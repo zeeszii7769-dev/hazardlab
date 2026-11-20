@@ -216,26 +216,93 @@
                 </div>
             </div>
 
-            <div class="chart-box">
-                <div class="legend">
-                    <span><i class="dot" style="background:#2d7ff9;"></i>Rene Haas 22%</span>
-                    <span><i class="dot" style="background:#10b981;"></i>Jensen Huang 17%</span>
-                    <span><i class="dot" style="background:#f59e0b;"></i>Ian Buck 17%</span>
-                    <span><i class="dot" style="background:#ef4444;"></i>Colette Kress 9%</span>
+                     <div class="chart-box" style="background-color: #0e1116; border: 1px solid #262b34; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px;">
+                    <span style="color: #e5e7eb; font-weight: bold;">📊 กราฟแท่งเทียน (H1) • <span style="color: #10b981;">MT5 Live</span></span>
+                    <div style="display: flex; gap: 10px; font-size: 11px; color: #8c95a6;">
+                        <span><i class="dot" style="background:#10b981;"></i>ซื้อขึ้น</span>
+                        <span><i class="dot" style="background:#ef4444;"></i>เทขาย</span>
+                    </div>
                 </div>
-      <div class="canvas-container">
-    <svg viewBox="0 0 400 180" style="width:100%; height:100%;">
-        <line x1="0" y1="30" x2="400" y2="30" stroke="#262b34" stroke-dasharray="4" />
-        <line x1="0" y1="90" x2="400" y2="90" stroke="#262b34" stroke-dasharray="4" />
-        <line x1="0" y1="150" x2="400" y2="150" stroke="#262b34" stroke-dasharray="4" />
-        <polyline fill="none" stroke="#2d7ff9" stroke-width="2.5" points="10,120 90,105 170,115 250,85 330,90 390,70" />
-        <polyline fill="none" stroke="#10b981" stroke-width="2.5" points="10,60 90,75 170,85 250,95 330,100 390,105" />
-        <polyline fill="none" stroke="#f59e0b" stroke-width="2.5" points="10,145 90,135 170,125 250,115 330,110 390,105" />
-        <polyline fill="none" stroke="#ef4444" stroke-width="2.5" points="10,165 90,160 170,152 250,156 330,150 390,145" />
-    </svg>
-</div>
+                <div class="canvas-container" style="height: 210px;">
+                    <svg viewBox="0 0 420 190" style="width:100%; height:100%; font-family: monospace;">
+                        <!-- เส้นตาราง Grid สไตล์ MT5 -->
+                        <line x1="0" y1="25" x2="375" y2="25" stroke="#1e232d" stroke-width="1" />
+                        <line x1="0" y1="65" x2="375" y2="65" stroke="#1e232d" stroke-width="1" />
+                        <line x1="0" y1="105" x2="375" y2="105" stroke="#1e232d" stroke-width="1" />
+                        <line x1="0" y1="145" x2="375" y2="145" stroke="#1e232d" stroke-width="1" />
+                        <line x1="60" y1="0" x2="60" y2="170" stroke="#1e232d" stroke-width="1" />
+                        <line x1="140" y1="0" x2="140" y2="170" stroke="#1e232d" stroke-width="1" />
+                        <line x1="220" y1="0" x2="220" y2="170" stroke="#1e232d" stroke-width="1" />
+                        <line x1="300" y1="0" x2="300" y2="170" stroke="#1e232d" stroke-width="1" />
+                        <line x1="375" y1="0" x2="375" y2="170" stroke="#2c323d" stroke-width="1" />
 
+                        <!-- แกนราคาด้านขวา (MT5 Price Scale) -->
+                        <text x="380" y="29" fill="#6b7280" font-size="9">25.0%</text>
+                        <text x="380" y="69" fill="#6b7280" font-size="9">20.0%</text>
+                        <text x="380" y="109" fill="#6b7280" font-size="9">15.0%</text>
+                        <text x="380" y="149" fill="#6b7280" font-size="9">10.0%</text>
+
+                        <!-- แท่งเทียนเขียว-แดง (ไส้เทียน + ตัวแท่ง) -->
+                        <line x1="20" y1="115" x2="20" y2="155" stroke="#10b981" stroke-width="1.5" />
+                        <rect x="15" y="125" width="10" height="20" fill="#10b981" />
+
+                        <line x1="42" y1="95" x2="42" y2="135" stroke="#10b981" stroke-width="1.5" />
+                        <rect x="37" y="105" width="10" height="20" fill="#10b981" />
+
+                        <line x1="64" y1="100" x2="64" y2="140" stroke="#ef4444" stroke-width="1.5" />
+                        <rect x="59" y="105" width="10" height="25" fill="#ef4444" />
+
+                        <line x1="86" y1="85" x2="86" y2="132" stroke="#10b981" stroke-width="1.5" />
+                        <rect x="81" y="95" width="10" height="30" fill="#10b981" />
+
+                        <line x1="108" y1="65" x2="108" y2="105" stroke="#10b981" stroke-width="1.5" />
+                        <rect x="103" y="75" width="10" height="20" fill="#10b981" />
+
+                        <line x1="130" y1="70" x2="130" y2="115" stroke="#ef4444" stroke-width="1.5" />
+                        <rect x="125" y="75" width="10" height="30" fill="#ef4444" />
+
+                        <line x1="152" y1="95" x2="152" y2="135" stroke="#ef4444" stroke-width="1.5" />
+                        <rect x="147" y="105" width="10" height="20" fill="#ef4444" />
+
+                        <line x1="174" y1="80" x2="174" y2="130" stroke="#10b981" stroke-width="1.5" />
+                        <rect x="169" y="90" width="10" height="35" fill="#10b981" />
+
+                        <line x1="196" y1="55" x2="196" y2="100" stroke="#10b981" stroke-width="1.5" />
+                        <rect x="191" y="65" width="10" height="25" fill="#10b981" />
+
+                        <line x1="218" y1="60" x2="218" y2="95" stroke="#ef4444" stroke-width="1.5" />
+                        <rect x="213" y="65" width="10" height="20" fill="#ef4444" />
+
+                        <line x1="240" y1="40" x2="240" y2="90" stroke="#10b981" stroke-width="1.5" />
+                        <rect x="235" y="50" width="10" height="35" fill="#10b981" />
+
+                        <line x1="262" y1="45" x2="262" y2="85" stroke="#ef4444" stroke-width="1.5" />
+                        <rect x="257" y="50" width="10" height="25" fill="#ef4444" />
+
+                        <line x1="284" y1="30" x2="284" y2="80" stroke="#10b981" stroke-width="1.5" />
+                        <rect x="279" y="40" width="10" height="35" fill="#10b981" />
+
+                        <line x1="306" y1="35" x2="306" y2="75" stroke="#ef4444" stroke-width="1.5" />
+                        <rect x="301" y="40" width="10" height="25" fill="#ef4444" />
+
+                        <line x1="328" y1="22" x2="328" y2="72" stroke="#10b981" stroke-width="1.5" />
+                        <rect x="323" y="32" width="10" height="33" fill="#10b981" />
+
+                        <!-- เส้นประราคาปัจจุบัน + ป้ายราคา MT5 ด้านขวา -->
+                        <line x1="0" y1="32" x2="375" y2="32" stroke="#10b981" stroke-width="1" stroke-dasharray="3,3" />
+                        <rect x="375" y="24" width="44" height="16" rx="2" fill="#10b981" />
+                        <text x="378" y="35" fill="#000" font-size="9" font-weight="bold">24.0%</text>
+
+                        <!-- แกนเวลาด้านล่าง -->
+                        <line x1="0" y1="170" x2="375" y2="170" stroke="#2c323d" stroke-width="1" />
+                        <text x="15" y="183" fill="#6b7280" font-size="9">08:00</text>
+                        <text x="135" y="183" fill="#6b7280" font-size="9">12:00</text>
+                        <text x="255" y="183" fill="#6b7280" font-size="9">16:00</text>
+                    </svg>
+                </div>
             </div>
+
         </div>
 
              <h3 class="section-title">ตลาดทั้งหมด</h3>
