@@ -1,0 +1,912 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HazardLab - ตลาดคาดการณ์</title>
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #13161b;
+            color: #ffffff;
+            line-height: 1.5;
+        }
+        .navbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 40px; border-bottom: 1px solid #262b34; gap: 20px;
+        }
+        .logo { font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+        .logo span { color: #8c95a6; font-weight: normal; font-size: 16px; }
+        .logo-icon { height: 32px; width: auto; display: block; flex-shrink: 0; }
+        .search-bar { flex-grow: 1; max-width: 500px; }
+        .search-bar input {
+            width: 100%; background-color: #1c2028; border: 1px solid #2c323d;
+            border-radius: 8px; padding: 10px 15px; color: #fff; font-size: 14px; outline: none;
+        }
+        .search-bar input:focus { border-color: #2d7ff9; }
+        .nav-buttons { display: flex; gap: 10px; }
+        .btn-login { background: transparent; color: #2d7ff9; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold; }
+        .btn-signup { background: #2d7ff9; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-weight: bold; }
+        .categories {
+            display: flex; gap: 20px; padding: 12px 40px; border-bottom: 1px solid #262b34;
+            overflow-x: auto; font-size: 14px; color: #8c95a6;
+        }
+        .categories a { color: inherit; text-decoration: none; white-space: nowrap; padding-bottom: 4px; }
+        .categories a.active { color: #ffffff; font-weight: bold; border-bottom: 2px solid #ffffff; }
+        .categories a:hover { color: #ffffff; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .featured-card {
+            background-color: #1c2028; border: 1px solid #2c323d; border-radius: 12px;
+            padding: 25px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 30px; margin-bottom: 40px;
+        }
+        @media (max-width: 850px) { .featured-card { grid-template-columns: 1fr; } }
+        .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .card-icon {
+            width: 48px; height: 48px; background-color: #76b900; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: #000;
+        }
+        .card-title { font-size: 22px; font-weight: bold; }
+        .option-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        .option-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 14px; background-color: #232832; border-radius: 8px;
+        }
+        .option-info { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 30px; height: 30px; border-radius: 50%; background-color: #3a4252; }
+        .percentage { font-size: 18px; font-weight: bold; }
+        .news-snippet { font-size: 13px; color: #8c95a6; border-top: 1px solid #2c323d; padding-top: 15px; margin-bottom: 15px; }
+        .news-snippet strong { color: #d1d5db; display: block; margin-top: 4px; }
+        .card-footer { display: flex; justify-content: space-between; font-size: 12px; color: #8c95a6; }
+        .chart-box {
+            background-color: #161920; border: 1px solid #2c323d; border-radius: 8px;
+            padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .legend { display: flex; flex-wrap: wrap; gap: 15px; font-size: 12px; color: #d1d5db; margin-bottom: 15px; }
+        .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+        .canvas-container { position: relative; height: 220px; width: 100%; }
+        .section-title { font-size: 20px; margin-bottom: 15px; }
+        .filter-tags { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
+        .tag {
+            background-color: #1c2028; color: #8c95a6; border: 1px solid #2c323d;
+            padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer;
+        }
+        .tag.active, .tag:hover { background-color: #2d7ff9; color: #ffffff; border-color: #2d7ff9; }
+        .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .mini-card {
+            background-color: #1c2028; border: 1px solid #2c323d; border-radius: 10px;
+            padding: 18px; transition: transform 0.2s;
+        }
+        .mini-card:hover { transform: translateY(-3px); border-color: #3e4656; }
+        .mini-card h4 { font-size: 15px; margin-bottom: 15px; }
+        .vote-buttons { display: flex; gap: 10px; }
+        .btn-yes {
+            flex: 1; background-color: rgba(16, 185, 129, 0.15); color: #10b981;
+            border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;
+        }
+        .btn-yes:hover { background-color: rgba(16, 185, 129, 0.3); }
+        .btn-no {
+            flex: 1; background-color: rgba(239, 68, 68, 0.15); color: #ef4444;
+            border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;
+        }
+        .btn-no:hover { background-color: rgba(239, 68, 68, 0.3); }
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-box {
+            background: #1c2028; border: 1px solid #2c323d; border-radius: 12px;
+            padding: 25px; width: 90%; max-width: 400px;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .close-btn { background: none; border: none; color: #8c95a6; font-size: 20px; cursor: pointer; }
+        .modal-input {
+            width: 100%; background: #13161b; border: 1px solid #2c323d; border-radius: 8px;
+            padding: 12px; color: #fff; font-size: 16px; margin: 10px 0 15px 0;
+        }
+        .payout-info { display: flex; justify-content: space-between; font-size: 14px; color: #10b981; margin-bottom: 20px; }
+        .btn-confirm {
+            width: 100%; background: #2d7ff9; color: #fff; border: none; padding: 12px;
+            border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;
+        }
+    
+            /* สไตล์แถบสวิตช์ตัวกรองขั้นสูง */
+        .advanced-filters {
+            display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+            margin-bottom: 20px; font-size: 13px; color: #8c95a6;
+        }
+        .toggle-label {
+            display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
+        }
+        .toggle-label input {
+            accent-color: #2d7ff9; width: 16px; height: 16px; cursor: pointer;
+        }
+
+        /* สไตล์การ์ดแบบหลายตัวเลือก (Multi-option) */
+        .multi-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 0; border-bottom: 1px solid #262b34; font-size: 13px;
+        }
+        .multi-row:last-child { border-bottom: none; }
+        .mini-btns { display: flex; gap: 6px; align-items: center; }
+        .btn-mini-yes {
+            background: rgba(16, 185, 129, 0.15); color: #10b981; border: none;
+            padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;
+        }
+        .btn-mini-yes:hover { background: rgba(16, 185, 129, 0.3); }
+        .btn-mini-no {
+            background: rgba(239, 68, 68, 0.15); color: #ef4444; border: none;
+            padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;
+        }
+        .btn-mini-no:hover { background: rgba(239, 68, 68, 0.3); }
+</style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><img src="/images/hazardlab-logo.png" alt="HazardLab logo" class="logo-icon" width="37" height="32">HazardLab</div>
+        <div class="search-bar"><input type="text" id="searchInput" placeholder="ค้นหาตลาดคาดการณ์..." oninput="searchCards()"></div>
+
+          <div class="nav-buttons" style="align-items: center;">
+            <div style="background: #1c2028; border: 1px solid #2c323d; padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: bold; color: #10b981;">
+                💰 ยอดเงิน: $<span id="userBalance">1000.00</span>
+            </div>
+            <button class="btn-signup" onclick="resetDemo()" style="background: #2c323d; font-size: 12px;">รีเซ็ตเงิน</button>
+                         <button id="authBtn" class="btn-signup" onclick="openAuthModal()" style="font-size: 12px;">👤 เข้าสู่ระบบ</button>
+           
+
+        </div>
+
+    </nav>
+
+    <div class="categories">
+        <a href="#" class="active">มาแรง</a>
+        <a href="#">ข่าวด่วน</a>
+        <a href="#">ใหม่</a>
+        <a href="#">การเมือง</a>
+        <a href="#">กีฬา</a>
+        <a href="#">Crypto</a>
+        <a href="#">Esports</a>
+        <a href="#">การเงิน</a>
+        <a href="#">เทคโนโลยี</a>
+        <a href="#">วัฒนธรรม</a>
+    </div>
+
+    <div class="container">
+        <div class="featured-card">
+            <div>
+                <div class="card-header">
+                    <div class="card-icon">NVIDIA</div>
+                    <div class="card-title">Next CEO of NVIDIA?</div>
+                </div>
+                <div class="option-list">
+                    <div class="option-item">
+                        <div class="option-info"><div class="avatar"></div><span>Rene Haas</span></div>
+                        <span class="percentage">22%</span>
+                    </div>
+                    <div class="option-item">
+                        <div class="option-info"><div class="avatar"></div><span>Jensen Huang (No Change)</span></div>
+                        <span class="percentage">17%</span>
+                    </div>
+                    <div class="option-item">
+                        <div class="option-info"><div class="avatar"></div><span>Ian Buck</span></div>
+                        <span class="percentage">17%</span>
+                    </div>
+                    <div class="option-item">
+                        <div class="option-info"><div class="avatar"></div><span>Colette Kress</span></div>
+                        <span class="percentage">9%</span>
+                    </div>
+                </div>
+                <div class="news-snippet">
+                    The New York Times
+                    <strong>7 People Nvidia Could Consider for Its Next C.E.O.</strong>
+                </div>
+                <div class="card-footer">
+                    <span>$3M ปริมาณการซื้อขาย</span>
+                    <span>สิ้นสุด ม.ค. 1, 2029</span>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <div class="legend">
+                    <span><i class="dot" style="background:#2d7ff9;"></i>Rene Haas 22%</span>
+                    <span><i class="dot" style="background:#10b981;"></i>Jensen Huang 17%</span>
+                    <span><i class="dot" style="background:#f59e0b;"></i>Ian Buck 17%</span>
+                    <span><i class="dot" style="background:#ef4444;"></i>Colette Kress 9%</span>
+                </div>
+      <div class="canvas-container">
+    <svg viewBox="0 0 400 180" style="width:100%; height:100%;">
+        <line x1="0" y1="30" x2="400" y2="30" stroke="#262b34" stroke-dasharray="4" />
+        <line x1="0" y1="90" x2="400" y2="90" stroke="#262b34" stroke-dasharray="4" />
+        <line x1="0" y1="150" x2="400" y2="150" stroke="#262b34" stroke-dasharray="4" />
+        <polyline fill="none" stroke="#2d7ff9" stroke-width="2.5" points="10,120 90,105 170,115 250,85 330,90 390,70" />
+        <polyline fill="none" stroke="#10b981" stroke-width="2.5" points="10,60 90,75 170,85 250,95 330,100 390,105" />
+        <polyline fill="none" stroke="#f59e0b" stroke-width="2.5" points="10,145 90,135 170,125 250,115 330,110 390,105" />
+        <polyline fill="none" stroke="#ef4444" stroke-width="2.5" points="10,165 90,160 170,152 250,156 330,150 390,145" />
+    </svg>
+</div>
+
+            </div>
+        </div>
+
+             <h3 class="section-title">ตลาดทั้งหมด</h3>
+        <div class="filter-tags">
+            <span class="tag active" onclick="filterCards('all', this)">ทั้งหมด</span>
+            <span class="tag" onclick="filterCards('tech', this)">เทคโนโลยี & AI</span>
+            <span class="tag" onclick="filterCards('politics', this)">การเมือง</span>
+            <span class="tag" onclick="filterCards('game', this)">เกม & Esports</span>
+            <span class="tag" onclick="filterCards('finance', this)">การเงิน</span>
+        </div>
+        <div class="advanced-filters">
+            <label class="toggle-label">
+                <input type="checkbox" id="hideGame" onchange="applyToggles()"> ซ่อนหมวดเกม & Esports
+            </label>
+            <label class="toggle-label">
+                <input type="checkbox" id="hideFinance" onchange="applyToggles()"> ซ่อนหมวดการเงิน
+            </label>
+        </div>
+        <div class="market-grid" id="dynamicMarketGrid" style="margin-bottom: 20px;"></div>
+
+        <div class="market-grid" id="marketGrid">
+            <div class="mini-card" data-category="tech">
+                <h4>Tesla x SpaceX Merger ในปีนี้หรือไม่?</h4>
+                <div class="vote-buttons">
+                    <button class="btn-yes" onclick="openTradeModal('Tesla x SpaceX Merger?', 'Yes', 14)">Yes 14%</button>
+                    <button class="btn-no" onclick="openTradeModal('Tesla x SpaceX Merger?', 'No', 86)">No 86%</button>
+                </div>
+            </div>
+            <div class="mini-card" data-category="game">
+                <h4>GTA VI จะเปิดตัวตามกำหนดการเดิมหรือไม่?</h4>
+                <div class="vote-buttons">
+                    <button class="btn-yes" onclick="openTradeModal('GTA VI เปิดตัวตามกำหนด?', 'Yes', 68)">Yes 68%</button>
+                    <button class="btn-no" onclick="openTradeModal('GTA VI เปิดตัวตามกำหนด?', 'No', 32)">No 32%</button>
+                </div>
+            </div>
+            <div class="mini-card" data-category="finance">
+                <h4>เฟดจะปรับลดอัตราดอกเบี้ยในการประชุมครั้งหน้า?</h4>
+                <div class="vote-buttons">
+                    <button class="btn-yes" onclick="openTradeModal('เฟดลดดอกเบี้ยครั้งหน้า?', 'Yes', 45)">Yes 45%</button>
+                    <button class="btn-no" onclick="openTradeModal('เฟดลดดอกเบี้ยครั้งหน้า?', 'No', 55)">No 55%</button>
+                </div>
+            </div>
+            <div class="mini-card" data-category="politics">
+                <h4>การเลือกตั้งสหรัฐฯ 2028 พรรคเดโมแครตจะชนะหรือไม่?</h4>
+                <div class="vote-buttons">
+                    <button class="btn-yes" onclick="openTradeModal('เดโมแครตชนะเลือกตั้ง 2028?', 'Yes', 51)">Yes 51%</button>
+                    <button class="btn-no" onclick="openTradeModal('เดโมแครตชนะเลือกตั้ง 2028?', 'No', 49)">No 49%</button>
+                </div>
+            </div>
+            <div class="mini-card" data-category="tech">
+                <h4>OpenAI จะเปิดตัวโมเดล GPT-6 ภายในปีนี้หรือไม่?</h4>
+                <div class="vote-buttons">
+                    <button class="btn-yes" onclick="openTradeModal('OpenAI เปิดตัว GPT-6 ปีนี้?', 'Yes', 35)">Yes 35%</button>
+                    <button class="btn-no" onclick="openTradeModal('OpenAI เปิดตัว GPT-6 ปีนี้?', 'No', 65)">No 65%</button>
+                </div>
+            </div>
+            <div class="mini-card" data-category="game">
+                <h4>ทีม T1 จะคว้าแชมป์ LoL Worlds 2026 ได้อีกสมัยหรือไม่?</h4>
+                <div class="vote-buttons">
+                    <button class="btn-yes" onclick="openTradeModal('T1 คว้าแชมป์ LoL Worlds 2026?', 'Yes', 28)">Yes 28%</button>
+                    <button class="btn-no" onclick="openTradeModal('T1 คว้าแชมป์ LoL Worlds 2026?', 'No', 72)">No 72%</button>
+                </div>
+            </div>
+                        <div class="mini-card" data-category="politics">
+                <h4>ผู้ชนะการเลือกตั้งประธานาธิบดีสหรัฐฯ 2028</h4>
+                <div class="multi-row">
+                    <span>J.D. Vance</span>
+                    <div class="mini-btns">
+                        <strong>37%</strong>
+                        <button class="btn-mini-yes" onclick="openTradeModal('เลือกตั้ง 2028: J.D. Vance', 'Yes', 37)">Yes</button>
+                        <button class="btn-mini-no" onclick="openTradeModal('เลือกตั้ง 2028: J.D. Vance', 'No', 63)">No</button>
+                    </div>
+                </div>
+                <div class="multi-row">
+                    <span>Jon Ossoff</span>
+                    <div class="mini-btns">
+                        <strong>26%</strong>
+                        <button class="btn-mini-yes" onclick="openTradeModal('เลือกตั้ง 2028: Jon Ossoff', 'Yes', 26)">Yes</button>
+                        <button class="btn-mini-no" onclick="openTradeModal('เลือกตั้ง 2028: Jon Ossoff', 'No', 74)">No</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mini-card" data-category="finance">
+                <h4>การตัดสินใจดอกเบี้ยของ Fed เดือนธันวาคม?</h4>
+                <div class="multi-row">
+                    <span>ขึ้น 25 bps</span>
+                    <div class="mini-btns">
+                        <strong>88%</strong>
+                        <button class="btn-mini-yes" onclick="openTradeModal('Fed: ขึ้น 25 bps', 'Yes', 88)">Yes</button>
+                        <button class="btn-mini-no" onclick="openTradeModal('Fed: ขึ้น 25 bps', 'No', 12)">No</button>
+                    </div>
+                </div>
+                <div class="multi-row">
+                    <span>คงอัตราดอกเบี้ยเดิม</span>
+                    <div class="mini-btns">
+                        <strong>9%</strong>
+                        <button class="btn-mini-yes" onclick="openTradeModal('Fed: คงดอกเบี้ยเดิม', 'Yes', 9)">Yes</button>
+                        <button class="btn-mini-no" onclick="openTradeModal('Fed: คงดอกเบี้ยเดิม', 'No', 91)">No</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+                <div style="margin-top: 45px; background: #1c2028; border: 1px solid #2c323d; border-radius: 12px; padding: 20px;">
+            <h3 style="font-size: 18px; margin-bottom: 15px;">📜 ประวัติการทายผลของฉัน</h3>
+            <div id="historyList" style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: #8c95a6;">
+                ยังไม่มีรายการทายผล ลองกดปุ่ม Yes หรือ No ด้านบนเพื่อเริ่มทายผลได้เลย!
+            </div>
+        </div>
+        <div style="margin-top: 30px; background: #1c2028; border: 1px solid #2c323d; border-radius: 12px; padding: 20px;">
+            <h3 style="font-size: 18px; margin-bottom: 15px;">🏆 ตารางอันดับผู้ทำกำไรสูงสุด (Leaderboard)</h3>
+            <div id="leaderboardList" style="display: flex; flex-direction: column; gap: 10px; font-size: 14px;"></div>
+        </div>
+
+    </div>
+        <footer style="border-top: 1px solid #262b34; margin-top: 60px; padding: 40px 20px; background-color: #161920; color: #8c95a6; font-size: 13px;">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 30px;">
+            <div style="max-width: 350px;">
+                <div style="font-size: 18px; font-weight: bold; color: #ffffff; margin-bottom: 10px;">
+                    📊 HazardLab
+                </div>
+                <p style="line-height: 1.6;">
+                    แพลตฟอร์มตลาดคาดการณ์เหตุการณ์ในอนาคต ติดตามแนวโน้มข่าวสาร เทคโนโลยี การเมือง และเศรษฐกิจแบบเรียลไทม์
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 50px; flex-wrap: wrap;">
+                <div>
+                    <strong style="color: #ffffff; display: block; margin-bottom: 10px;">ตลาดยอดนิยม</strong>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
+                        <li><a href="#" style="color: inherit; text-decoration: none;">เทคโนโลยี & AI</a></li>
+                        <li><a href="#" style="color: inherit; text-decoration: none;">การเลือกตั้งสหรัฐฯ 2028</a></li>
+                        <li><a href="#" style="color: inherit; text-decoration: none;">นโยบายดอกเบี้ย Fed</a></li>
+                        <li><a href="#" style="color: inherit; text-decoration: none;">เกม & Esports</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <strong style="color: #ffffff; display: block; margin-bottom: 10px;">ข้อมูลและชุมชน</strong>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
+                        <li><a href="#" style="color: inherit; text-decoration: none;">ลีดเดอร์บอร์ด (Leaderboard)</a></li>
+                        <li><a href="#" style="color: inherit; text-decoration: none;">กติกาและวิธีการเล่น</a></li>
+                        <li><a href="#" style="color: inherit; text-decoration: none;">X (Twitter)</a></li>
+                        <li><a href="#" style="color: inherit; text-decoration: none;">Discord</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div style="max-width: 1200px; margin: 30px auto 0 auto; padding-top: 20px; border-top: 1px solid #262b34; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 12px;">
+            <span>© 2026 HazardLab Demo. สร้างขึ้นเพื่อการศึกษาและทดลองระบบ</span>
+            <span>หมายเหตุ: ข้อมูลและยอดเงินทั้งหมดบนหน้าเว็บนี้เป็นระบบจำลอง (Demo)</span>
+        </div>
+    </footer>
+
+    <div class="modal-overlay" id="tradeModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h4 id="modalTitle">หัวข้อคำถาม</h4>
+                <button class="close-btn" onclick="closeTradeModal()">&times;</button>
+            </div>
+            <p id="modalChoice" style="font-size: 14px; color: #8c95a6; margin-bottom: 10px;">เลือกฝั่ง: Yes</p>
+            <label style="font-size: 13px;">จำนวนเงินเดิมพัน ($ USD)</label>
+            <input type="number" id="betAmount" class="modal-input" value="10" min="1" oninput="calculatePayout()">
+            <div class="payout-info">
+                <span>ผลตอบแทนหากทายถูก:</span>
+                <strong id="payoutResult">$71.43</strong>
+            </div>
+            <button class="btn-confirm" onclick="confirmTrade()">ยืนยันคำสั่งซื้อ</button>
+        </div>
+    </div>
+        <!-- หน้าต่างป๊อปอัป เข้าสู่ระบบด้วย Gmail / เบอร์โทร / Apple ID -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-box" style="text-align: center; padding: 30px 24px; max-width: 390px;">
+            <div style="display: flex; justify-content: flex-end;">
+                <button class="close-btn" onclick="closeAuthModal()">&times;</button>
+            </div>
+            
+            <div style="width: 48px; height: 48px; background: #2d7ff9; border-radius: 12px; margin: 0 auto 14px auto; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                📊
+            </div>
+            <h3 style="font-size: 20px; margin-bottom: 6px; color: #ffffff;">เข้าสู่ระบบเพื่อเริ่มทายผล</h3>
+            <p style="font-size: 12px; color: #8c95a6; margin-bottom: 22px;">เลือกช่องทางที่ต้องการเข้าใช้งาน (รับเงินทดลองฟรี $1,000)</p>
+
+            <!-- ปุ่มเลือกช่องทางหลัก 3 ช่องทาง -->
+            <div id="authMainButtons" style="display: flex; flex-direction: column; gap: 12px;">
+                <button onclick="openMethodForm('gmail')" style="width: 100%; background: #ffffff; color: #13161b; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <span style="color: #ea4335; font-weight: 900; font-size: 16px;">G</span> ดำเนินการต่อด้วย Gmail
+                </button>
+
+                <button onclick="openMethodForm('phone')" style="width: 100%; background: #232832; color: #ffffff; border: 1px solid #2c323d; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    📱 เข้าสู่ระบบด้วย เบอร์โทรศัพท์
+                </button>
+
+                <button onclick="openMethodForm('apple')" style="width: 100%; background: #000000; color: #ffffff; border: 1px solid #3a4252; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    🍎 ดำเนินการต่อด้วย Apple ID
+                </button>
+            </div>
+
+            <!-- ฟอร์มกรอกข้อมูลตามช่องทางที่เลือก -->
+            <div id="methodLoginForm" style="display: none; text-align: left; margin-top: 10px;">
+                <div id="methodLabel" style="font-size: 13px; font-weight: bold; color: #2d7ff9; margin-bottom: 8px;"></div>
+                <input type="text" id="authIdentifier" class="modal-input" placeholder="">
+                <input type="password" id="authSecretCode" class="modal-input" placeholder="" style="margin-top: 10px;">
+                <button class="btn-confirm" onclick="submitMethodAuth()" style="margin-top: 15px;">ยืนยันเข้าสู่ระบบ</button>
+                <button onclick="backToMainAuth()" style="width: 100%; background: transparent; border: none; color: #8c95a6; font-size: 12px; margin-top: 12px; cursor: pointer;">← กลับไปเลือกช่องทางอื่น</button>
+            </div>
+
+            <p style="font-size: 11px; color: #8c95a6; margin-top: 22px; line-height: 1.5;">
+                การดำเนินการต่อถือว่าคุณยอมรับข้อกำหนดและเงื่อนไข<br>ของแพลตฟอร์มตลาดคาดการณ์จำลอง
+            </p>
+        </div>
+    </div>
+
+
+    <script>
+            function filterCards(category, element) {
+            document.querySelectorAll('.tag').forEach(tag => tag.classList.remove('active'));
+            element.classList.add('active');
+
+            const cards = document.querySelectorAll('.mini-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function searchCards() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.mini-card');
+            cards.forEach(card => {
+                const title = card.querySelector('h4').innerText.toLowerCase();
+                card.style.display = title.includes(keyword) ? 'block' : 'none';
+            });
+        }
+
+               let currentPercent = 50;
+        let currentTitle = '';
+        let currentChoice = '';
+        let currentBtn = null;
+               let currentUser = localStorage.getItem('currentUser') || 'Guest';
+        let usersDB = JSON.parse(localStorage.getItem('usersDB')) || {
+            'Guest': { password: '', balance: 1000.00, history: [] }
+        };
+
+        let balance = usersDB[currentUser] ? usersDB[currentUser].balance : 1000.00;
+        let tradeHistory = usersDB[currentUser] ? usersDB[currentUser].history : [];
+
+        updateAuthButton();
+
+              let selectedAuthMethod = 'gmail';
+
+        function openAuthModal() {
+            if (currentUser !== 'Guest') {
+                if (confirm(`คุณกำลังเข้าสู่ระบบในชื่อ "${currentUser}" ต้องการออกจากระบบใช่หรือไม่?`)) {
+                    currentUser = 'Guest';
+                    localStorage.setItem('currentUser', 'Guest');
+                    loadUserData();
+                }
+                return;
+            }
+            backToMainAuth();
+            document.getElementById('authModal').style.display = 'flex';
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+
+        function openMethodForm(method) {
+            selectedAuthMethod = method;
+            document.getElementById('authMainButtons').style.display = 'none';
+            document.getElementById('methodLoginForm').style.display = 'block';
+
+            const label = document.getElementById('methodLabel');
+            const idInput = document.getElementById('authIdentifier');
+            const passInput = document.getElementById('authSecretCode');
+            idInput.value = '';
+            passInput.value = '';
+
+            if (method === 'gmail') {
+                label.innerText = '📧 เข้าสู่ระบบด้วยบัญชี Gmail';
+                idInput.placeholder = 'กรอกอีเมล Gmail (เช่น somchai@gmail.com)';
+                passInput.type = 'password';
+                passInput.placeholder = 'รหัสผ่าน (Password)';
+            } else if (method === 'phone') {
+                label.innerText = '📱 เข้าสู่ระบบด้วยเบอร์โทรศัพท์';
+                idInput.placeholder = 'กรอกเบอร์มือถือ (เช่น 0812345678)';
+                passInput.type = 'text';
+                passInput.placeholder = 'กรอกรหัส OTP จำลอง 6 หลัก (เช่น 123456)';
+            } else if (method === 'apple') {
+                label.innerText = '🍎 เข้าสู่ระบบด้วย Apple ID';
+                idInput.placeholder = 'กรอก Apple ID (เช่น user@icloud.com)';
+                passInput.type = 'password';
+                passInput.placeholder = 'รหัสผ่าน Apple ID';
+            }
+        }
+
+        function backToMainAuth() {
+            document.getElementById('authMainButtons').style.display = 'flex';
+            document.getElementById('methodLoginForm').style.display = 'none';
+        }
+
+        function submitMethodAuth() {
+            const rawId = document.getElementById('authIdentifier').value.trim();
+            const secret = document.getElementById('authSecretCode').value.trim();
+
+            if (!rawId || !secret) {
+                alert('กรุณากรอกข้อมูลให้ครบทั้ง 2 ช่องครับ');
+                return;
+            }
+
+            if (selectedAuthMethod === 'gmail' && !rawId.includes('@')) {
+                alert('กรุณากรอกรูปแบบอีเมล Gmail ให้ถูกต้องครับ');
+                return;
+            }
+
+            let displayName = rawId;
+            if (selectedAuthMethod === 'gmail') displayName = `G: ${rawId.split('@')[0]}`;
+            if (selectedAuthMethod === 'phone') displayName = `📱 ${rawId}`;
+            if (selectedAuthMethod === 'apple') displayName = `🍎 ${rawId.split('@')[0]}`;
+
+            if (usersDB[displayName]) {
+                if (selectedAuthMethod !== 'phone' && usersDB[displayName].password !== secret) {
+                    alert('❌ รหัสผ่านไม่ถูกต้องสำหรับบัญชีนี้!');
+                    return;
+                }
+                alert(`✅ ยินดีต้อนรับกลับมา ${displayName}!`);
+            } else {
+                usersDB[displayName] = { password: secret, balance: 1000.00, history: [] };
+                localStorage.setItem('usersDB', JSON.stringify(usersDB));
+                alert(`🎉 เข้าสู่ระบบสำเร็จ! บัญชี ${displayName} ได้รับเงินเริ่มต้น $1,000.00`);
+            }
+
+            currentUser = displayName;
+            localStorage.setItem('currentUser', displayName);
+            closeAuthModal();
+            loadUserData();
+        }
+
+        function loadUserData() {
+            if (!usersDB[currentUser]) {
+                usersDB[currentUser] = { password: '', balance: 1000.00, history: [] };
+            }
+            balance = usersDB[currentUser].balance;
+            tradeHistory = usersDB[currentUser].history;
+            updateAuthButton();
+            updateUI();
+        }
+
+        function updateAuthButton() {
+            const btn = document.getElementById('authBtn');
+            if (!btn) return;
+            if (currentUser === 'Guest') {
+                btn.innerText = '👤 สมัครสมาชิก';
+                btn.style.background = '#2d7ff9';
+                btn.style.color = '#fff';
+            } else {
+                btn.innerText = `🟢 ${currentUser} (ออก)`;
+                btn.style.background = '#10b981';
+                btn.style.color = '#000';
+            }
+        }
+
+        const adminMarkets = JSON.parse(localStorage.getItem('customMarkets')) || [];
+        renderDynamicMarkets();
+
+        function renderDynamicMarkets() {
+            const dynamicGrid = document.getElementById('dynamicMarketGrid');
+            if (!dynamicGrid || adminMarkets.length === 0) return;
+
+            const newItems = adminMarkets.filter(m => m.id > 10);
+            dynamicGrid.innerHTML = newItems.map(m => `
+                <div class="mini-card" data-category="${m.category}">
+                    <h4>${m.title} ${m.status !== 'open' ? `<span style="color:#f59e0b; font-size:12px;">(จบเกม: ${m.status} ชนะ)</span>` : ''}</h4>
+                    <div class="vote-buttons">
+                        <button class="btn-yes" ${m.status !== 'open' ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''} onclick="openTradeModal('${m.title}', 'Yes', ${m.yes})">Yes ${m.yes}%</button>
+                        <button class="btn-no" ${m.status !== 'open' ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''} onclick="openTradeModal('${m.title}', 'No', ${100 - m.yes})">No ${100 - m.yes}%</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        updateUI();
+
+        function openTradeModal(title, choice, percent) {
+                        currentBtn = event.target;
+
+            currentTitle = title;
+            currentChoice = choice;
+            currentPercent = percent;
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalChoice').innerText = `เลือกฝั่ง: ${choice} (${percent}%)`;
+            document.getElementById('tradeModal').style.display = 'flex';
+            calculatePayout();
+        }
+
+        function closeTradeModal() {
+            document.getElementById('tradeModal').style.display = 'none';
+        }
+
+        function calculatePayout() {
+            const amount = parseFloat(document.getElementById('betAmount').value) || 0;
+            const payout = amount / (currentPercent / 100);
+            document.getElementById('payoutResult').innerText = '$' + payout.toFixed(2);
+        }
+
+            function confirmTrade() {
+            const amount = parseFloat(document.getElementById('betAmount').value) || 0;
+            if (amount <= 0) {
+                alert('กรุณาใส่จำนวนเงินที่ถูกต้อง');
+                return;
+            }
+            if (amount > balance) {
+                alert('ยอดเงินในกระเป๋าไม่เพียงพอ!');
+                return;
+            }
+
+            const payout = amount / (currentPercent / 100);
+            balance -= amount;
+
+            const shift = Math.max(1, Math.min(5, Math.floor(amount / 20)));
+            const newPercent = Math.min(99, currentPercent + shift);
+            const oppositePercent = 100 - newPercent;
+
+            if (currentBtn) {
+                const parentCard = currentBtn.closest('.mini-card');
+                if (parentCard.querySelector('.vote-buttons')) {
+                    const yesBtn = parentCard.querySelector('.btn-yes');
+                    const noBtn = parentCard.querySelector('.btn-no');
+                    if (currentChoice === 'Yes') {
+                        yesBtn.innerText = `Yes ${newPercent}%`;
+                        noBtn.innerText = `No ${oppositePercent}%`;
+                    } else {
+                        noBtn.innerText = `No ${newPercent}%`;
+                        yesBtn.innerText = `Yes ${oppositePercent}%`;
+                    }
+                } else if (currentBtn.closest('.multi-btns')) {
+                    const strongTag = currentBtn.closest('.multi-btns').querySelector('strong');
+                    if (strongTag && currentChoice === 'Yes') {
+                        strongTag.innerText = `${newPercent}%`;
+                    }
+                }
+            }
+
+            tradeHistory.unshift({
+                title: currentTitle,
+                choice: currentChoice,
+                percent: currentPercent,
+                amount: amount.toFixed(2),
+                payout: payout.toFixed(2)
+            });
+
+                     usersDB[currentUser].balance = balance;
+            usersDB[currentUser].history = tradeHistory;
+            localStorage.setItem('usersDB', JSON.stringify(usersDB));
+
+
+            updateUI();
+            closeTradeModal();
+        }
+
+
+              function updateUI() {
+            document.getElementById('userBalance').innerText = balance.toFixed(2);
+            const historyDiv = document.getElementById('historyList');
+            if (tradeHistory.length === 0) {
+                historyDiv.innerHTML = 'ยังไม่มีรายการทายผล ลองกดปุ่ม Yes หรือ No ด้านบนเพื่อเริ่มทายผลได้เลย!';
+                renderLeaderboard();
+                return;
+            }
+            historyDiv.innerHTML = tradeHistory.map(item => `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #232832; padding: 12px 16px; border-radius: 8px; color: #fff;">
+                    <div>
+                        <strong>${item.title}</strong>
+                        <span style="margin-left: 10px; padding: 2px 8px; border-radius: 4px; font-size: 12px; background: ${item.choice === 'Yes' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}; color: ${item.choice === 'Yes' ? '#10b981' : '#ef4444'};">
+                            ${item.choice} (${item.percent}%)
+                        </span>
+                        ${item.result === 'WIN' ? '<span style="margin-left:8px; background:#10b981; color:#000; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">WIN +$' + item.payout + '</span>' : ''}
+                        ${item.result === 'LOSE' ? '<span style="margin-left:8px; background:#ef4444; color:#fff; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">LOSE</span>' : ''}
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 13px; color: #8c95a6;">ลงเงิน: $${item.amount}</div>
+                        <div style="font-size: 14px; color: #10b981; font-weight: bold;">ลุ้นรับ: $${item.payout}</div>
+                    </div>
+                </div>
+    
+            `).join('');
+            renderLeaderboard();
+        } 
+        function renderLeaderboard() {
+            const lbDiv = document.getElementById('leaderboardList');
+            if (!lbDiv) return;
+
+            const players = [
+                              { name: currentUser === 'Guest' ? 'คุณ (Guest)' : currentUser, balance: balance, isMe: true },
+
+                { name: 'CryptoWhale_TH', balance: 1450.00, isMe: false },
+                { name: 'Nostradamus99', balance: 1120.50, isMe: false },
+                { name: 'AlphaTrader', balance: 980.00, isMe: false },
+                { name: 'LuckyGuess', balance: 850.25, isMe: false }
+            ];
+
+            players.sort((a, b) => b.balance - a.balance);
+
+            lbDiv.innerHTML = players.map((p, index) => {
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: ${p.isMe ? 'rgba(45, 127, 249, 0.15)' : '#232832'}; border: 1px solid ${p.isMe ? '#2d7ff9' : 'transparent'}; padding: 12px 16px; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 16px; font-weight: bold; width: 28px;">${medal}</span>
+                            <strong style="color: ${p.isMe ? '#2d7ff9' : '#ffffff'};">${p.name}</strong>
+                        </div>
+                        <div style="font-weight: bold; color: #10b981;">$${p.balance.toFixed(2)}</div>
+                    </div>
+                `;
+             }).join('');
+        }
+
+        function resetDemo() {
+            balance = 1000.00;
+            tradeHistory = [];
+            usersDB[currentUser].balance = 1000.00;
+            usersDB[currentUser].history = [];
+            localStorage.setItem('usersDB', JSON.stringify(usersDB));
+            updateUI();
+        }
+
+
+                function applyToggles() {
+            const hideGame = document.getElementById('hideGame').checked;
+            const hideFinance = document.getElementById('hideFinance').checked;
+            const cards = document.querySelectorAll('.mini-card');
+
+            cards.forEach(card => {
+                const cat = card.getAttribute('data-category');
+                if ((hideGame && cat === 'game') || (hideFinance && cat === 'finance')) {
+                    card.style.display = 'none';
+                } else {
+                    card.style.display = 'block';
+                }
+            });
+        }
+
+</script>
+<script>
+// ระบบดึงข้อมูลเรียลไทม์จาก Polymarket Gamma API (อัปเดตทุก 30 วินาที)
+(function() {
+    function parseProb(m) {
+        try {
+            let p = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : m.outcomePrices;
+            if (Array.isArray(p) && p.length > 0) {
+                let val = Math.round(parseFloat(p[0]) * 100);
+                return Math.max(1, Math.min(99, isNaN(val) ? 50 : val));
+            }
+        } catch (e) {}
+        return 50;
+    }
+
+    function guessCategory(title) {
+        const t = (title || '').toLowerCase();
+        if (t.includes('ai') || t.includes('gpt') || t.includes('nvidia') || t.includes('tesla') || t.includes('spacex') || t.includes('apple')) return 'tech';
+        if (t.includes('fed') || t.includes('rate') || t.includes('btc') || t.includes('bitcoin') || t.includes('crypto') || t.includes('stock')) return 'finance';
+        if (t.includes('game') || t.includes('gta') || t.includes('lol') || t.includes('nba') || t.includes('nfl') || t.includes('world cup')) return 'game';
+        return 'politics';
+    }
+
+    function fmtVol(v) {
+        const n = parseFloat(v) || 0;
+        if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
+        if (n >= 1000) return '$' + (n / 1000).toFixed(0) + 'K';
+        return '$' + n.toFixed(0);
+    }
+
+    async function syncPolymarketRealtime() {
+        const titleHeading = document.querySelector('.section-title');
+        try {
+          const res = await fetch('https://gamma-api.polymarket.com/events?closed=false&limit=13&order=volume&ascending=false');
+
+
+            if (!res.ok) throw new Error('API Error');
+            const events = await res.json();
+            if (!Array.isArray(events) || events.length === 0) return;
+
+            // 1. อัปเดตการ์ดเด่นด้านบน (Featured Card)
+            const topEvent = events.find(e => e.markets && e.markets.length >= 2) || events[0];
+            if (topEvent) {
+                const fTitle = document.querySelector('.featured-card .card-title');
+                const fIcon = document.querySelector('.featured-card .card-icon');
+                const fList = document.querySelector('.featured-card .option-list');
+                const fLegend = document.querySelector('.featured-card .legend');
+                const fFooter = document.querySelectorAll('.featured-card .card-footer span');
+
+                if (fTitle) fTitle.innerText = topEvent.title;
+                if (fIcon && topEvent.image) fIcon.innerHTML = `<img src="${topEvent.image}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+                if (fFooter[0]) fFooter[0].innerText = `${fmtVol(topEvent.volume)} ปริมาณการซื้อขาย`;
+                if (fFooter[1]) fFooter[1].innerText = `🟢 LIVE Polymarket`;
+
+                const colors = ['#2d7ff9', '#10b981', '#f59e0b', '#ef4444'];
+                const topMarkets = (topEvent.markets || []).slice(0, 4).map((m, i) => ({
+                    name: m.groupItemTitle || m.question || `ตัวเลือก ${i + 1}`,
+                    prob: parseProb(m),
+                    color: colors[i % colors.length]
+                })).sort((a, b) => b.prob - a.prob);
+
+                if (fList && topMarkets.length > 0) {
+                    fList.innerHTML = topMarkets.map(item => `
+                        <div class="option-item" style="cursor:pointer;" onclick="openTradeModal('${topEvent.title.replace(/'/g, "\\'")}: ${item.name.replace(/'/g, "\\'")}', 'Yes', ${item.prob})">
+                            <div class="option-info"><div class="avatar" style="border:2px solid ${item.color};"></div><span>${item.name}</span></div>
+                            <span class="percentage">${item.prob}%</span>
+                        </div>
+                    `).join('');
+                }
+                if (fLegend && topMarkets.length > 0) {
+                    fLegend.innerHTML = topMarkets.map(item => `
+                        <span><i class="dot" style="background:${item.color};"></i>${item.name.substring(0, 15)} ${item.prob}%</span>
+                    `).join('');
+                }
+            }
+
+            // 2. อัปเดตการ์ดตลาดทั้งหมด
+            const grid = document.getElementById('marketGrid');
+            if (grid) {
+                grid.innerHTML = events.slice(1, 13).map(ev => {
+                    const cat = guessCategory(ev.title);
+                    const mkts = ev.markets || [];
+                    const safeEvTitle = (ev.title || '').replace(/'/g, "\\'");
+
+                    if (mkts.length > 1) {
+                        const rows = mkts.slice(0, 2).map(m => {
+                            const sub = m.groupItemTitle || m.question || 'ตัวเลือก';
+                            const p = parseProb(m);
+                            const safeSub = sub.replace(/'/g, "\\'");
+                            return `
+                                <div class="multi-row">
+                                    <span>${sub}</span>
+                                    <div class="mini-btns">
+                                        <strong>${p}%</strong>
+                                        <button class="btn-mini-yes" onclick="openTradeModal('${safeEvTitle}: ${safeSub}', 'Yes', ${p})">Yes</button>
+                                        <button class="btn-mini-no" onclick="openTradeModal('${safeEvTitle}: ${safeSub}', 'No', ${100 - p})">No</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                        return `<div class="mini-card" data-category="${cat}"><h4>${ev.title}</h4>${rows}<div style="font-size:11px;color:#8c95a6;margin-top:10px;">Vol: ${fmtVol(ev.volume)} • 🟢 Live</div></div>`;
+                    } else {
+                        const p = parseProb(mkts[0] || {});
+                        return `
+                            <div class="mini-card" data-category="${cat}">
+                                <h4>${ev.title}</h4>
+                                <div class="vote-buttons">
+                                    <button class="btn-yes" onclick="openTradeModal('${safeEvTitle}', 'Yes', ${p})">Yes ${p}%</button>
+                                    <button class="btn-no" onclick="openTradeModal('${safeEvTitle}', 'No', ${100 - p})">No ${100 - p}%</button>
+                                </div>
+                                <div style="font-size:11px;color:#8c95a6;margin-top:10px;">Vol: ${fmtVol(ev.volume)} • 🟢 Live</div>
+                            </div>
+                        `;
+                    }
+                }).join('');
+            }
+
+            if (titleHeading) {
+                const timeStr = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                titleHeading.innerHTML = `ตลาดทั้งหมด <span style="font-size:12px;color:#10b981;font-weight:normal;">(🟢 LIVE Polymarket • อัปเดต ${timeStr})</span>`;
+            }
+        } catch (err) {
+            if (titleHeading) titleHeading.innerHTML = `ตลาดทั้งหมด <span style="font-size:12px;color:#f59e0b;font-weight:normal;">(🟡 โหมดข้อมูลสำรอง)</span>`;
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        syncPolymarketRealtime();
+        setInterval(syncPolymarketRealtime, 30000);
+    });
+})();
+</script>
+
+</body>
+</html>

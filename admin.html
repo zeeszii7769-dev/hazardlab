@@ -1,0 +1,279 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - ระบบจัดการแอดมิน</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #13161b; color: #ffffff; padding: 30px 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .login-box {
+            max-width: 400px; margin: 80px auto; background: #1c2028;
+            border: 1px solid #2c323d; border-radius: 12px; padding: 30px; text-align: center;
+        }
+        .login-box h2 { margin-bottom: 10px; font-size: 20px; }
+        .login-box p { color: #8c95a6; font-size: 13px; margin-bottom: 20px; }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 20px; border-bottom: 1px solid #262b34; margin-bottom: 30px;
+        }
+        .header-btns { display: flex; gap: 10px; }
+        .btn-back {
+            background: #2c323d; color: #fff; text-decoration: none;
+            padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold;
+        }
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;
+            padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;
+        }
+        .card {
+            background: #1c2028; border: 1px solid #2c323d; border-radius: 12px;
+            padding: 25px; margin-bottom: 30px;
+        }
+        .card h3 { margin-bottom: 20px; font-size: 18px; color: #2d7ff9; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 13px; color: #8c95a6; margin-bottom: 6px; }
+        .form-control {
+            width: 100%; background: #13161b; border: 1px solid #2c323d;
+            border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 14px;
+        }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn-create {
+            background: #2d7ff9; color: #fff; border: none; padding: 12px 20px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px;
+        }
+        .btn-create:hover { background: #1e6ce0; }
+        .market-item {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+            background: #232832; padding: 15px; border-radius: 8px; margin-bottom: 12px;
+        }
+        .badge {
+            font-size: 11px; padding: 3px 8px; border-radius: 12px;
+            background: #2c323d; color: #8c95a6; margin-left: 8px;
+        }
+        .action-btns { display: flex; gap: 8px; }
+        .btn-win-yes {
+            background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
+        }
+        .btn-win-no {
+            background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
+        }
+        .btn-delete {
+            background: #3a4252; color: #fff; border: none;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+       <!-- หน้าต่างล็อกอินป้องกันแอดมิน -->
+    <div id="loginSection" class="login-box">
+        <h2>🔒 ยืนยันตัวตนแอดมิน</h2>
+        <p>กรุณากรอก ID และรหัสผ่านผู้ดูแลระบบเพื่อเข้าจัดการตลาดคาดการณ์</p>
+        <div class="form-group">
+            <input type="text" id="adminUser" class="form-control" placeholder="กรอก Admin ID..." onkeyup="if(event.key==='Enter') checkLogin()">
+        </div>
+        <div class="form-group">
+            <input type="password" id="adminPass" class="form-control" placeholder="กรอกรหัสผ่านแอดมิน..." onkeyup="if(event.key==='Enter') checkLogin()">
+        </div>
+        <button class="btn-create" onclick="checkLogin()">เข้าสู่ระบบแอดมิน</button>
+        <div style="margin-top: 15px;">
+            <a href="index.html" style="color: #8c95a6; font-size: 12px; text-decoration: none;">← กลับหน้าเว็บไซต์หลัก</a>
+        </div>
+    </div>
+
+    <!-- เนื้อหาหน้าแอดมิน (ซ่อนไว้จนกว่าจะล็อกอินผ่าน) -->
+    <div id="adminContent" class="container" style="display: none;">
+        <div class="header">
+            <h2>🛠️ ระบบจัดการแอดมิน (Admin Panel)</h2>
+            <div class="header-btns">
+                <a href="index.html" class="btn-back">← กลับหน้าหลัก</a>
+                <button class="btn-logout" onclick="logoutAdmin()">ออกจากระบบ</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>➕ สร้างหัวข้อทายผลใหม่</h3>
+            <div class="form-group">
+                <label>หัวข้อคำถาม (เช่น Bitcoin จะทะลุ $150,000 ในปีนี้หรือไม่?)</label>
+                <input type="text" id="newTitle" class="form-control" placeholder="พิมพ์คำถามที่ต้องการเปิดให้ทายผล...">
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>หมวดหมู่</label>
+                    <select id="newCategory" class="form-control">
+                        <option value="tech">เทคโนโลยี & AI</option>
+                        <option value="politics">การเมือง</option>
+                        <option value="game">เกม & Esports</option>
+                        <option value="finance">การเงิน</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>โอกาสฝั่ง Yes เริ่มต้น (%)</label>
+                    <input type="number" id="newYesPercent" class="form-control" value="50" min="1" max="99">
+                </div>
+            </div>
+            <button class="btn-create" onclick="addMarket()">เปิดตลาดทายผลนี้</button>
+        </div>
+
+        <div class="card">
+            <h3>⚖️ จัดการตลาดที่เปิดอยู่ และ กดตัดสินผลแพ้-ชนะ</h3>
+            <div id="adminMarketList"></div>
+        </div>
+    </div>
+
+    <script>
+            // ตั้งค่า Admin ID และ Password ตรงนี้
+        const ADMIN_ID = "admin123";
+        const ADMIN_SECRET = "admin1234";
+
+        // ตรวจสอบสถานะการล็อกอิน
+        if (sessionStorage.getItem('isAdminAuth') === 'true') {
+            showAdminPanel();
+        }
+
+        function checkLogin() {
+            const inputUser = document.getElementById('adminUser').value.trim();
+            const inputPass = document.getElementById('adminPass').value;
+
+            if (inputUser === ADMIN_ID && inputPass === ADMIN_SECRET) {
+                sessionStorage.setItem('isAdminAuth', 'true');
+                showAdminPanel();
+            } else {
+                alert('❌ Admin ID หรือ รหัสผ่านไม่ถูกต้อง! ไม่มีสิทธิ์เข้าถึงระบบแอดมิน');
+                document.getElementById('adminPass').value = '';
+            }
+        }
+
+
+        function showAdminPanel() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'block';
+            renderAdminMarkets();
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('isAdminAuth');
+            window.location.href = 'index.html';
+        }
+
+        const defaultMarkets = [
+            { id: 1, title: 'Tesla x SpaceX Merger ในปีนี้หรือไม่?', category: 'tech', yes: 14, status: 'open' },
+            { id: 2, title: 'GTA VI จะเปิดตัวตามกำหนดการเดิมหรือไม่?', category: 'game', yes: 68, status: 'open' },
+            { id: 3, title: 'เฟดจะปรับลดอัตราดอกเบี้ยในการประชุมครั้งหน้า?', category: 'finance', yes: 45, status: 'open' },
+            { id: 4, title: 'การเลือกตั้งสหรัฐฯ 2028 พรรคเดโมแครตจะชนะหรือไม่?', category: 'politics', yes: 51, status: 'open' },
+            { id: 5, title: 'OpenAI จะเปิดตัวโมเดล GPT-6 ภายในปีนี้หรือไม่?', category: 'tech', yes: 35, status: 'open' },
+            { id: 6, title: 'ทีม T1 จะคว้าแชมป์ LoL Worlds 2026 ได้อีกสมัยหรือไม่?', category: 'game', yes: 28, status: 'open' }
+        ];
+
+              let savedMarkets = JSON.parse(localStorage.getItem('customMarkets'));
+        let markets = (savedMarkets && savedMarkets.length > 0) ? savedMarkets : defaultMarkets;
+        localStorage.setItem('customMarkets', JSON.stringify(markets));
+
+
+        function addMarket() {
+            const title = document.getElementById('newTitle').value.trim();
+            const category = document.getElementById('newCategory').value;
+            const yes = parseInt(document.getElementById('newYesPercent').value) || 50;
+
+            if (!title) {
+                alert('กรุณากรอกหัวข้อคำถามก่อนครับ');
+                return;
+            }
+            if (yes < 1 || yes > 99) {
+                alert('กรุณาใส่เปอร์เซ็นต์ระหว่าง 1 ถึง 99');
+                return;
+            }
+
+            markets.unshift({
+                id: Date.now(),
+                title: title,
+                category: category,
+                yes: yes,
+                status: 'open'
+            });
+
+            localStorage.setItem('customMarkets', JSON.stringify(markets));
+            document.getElementById('newTitle').value = '';
+            renderAdminMarkets();
+            alert('เพิ่มหัวข้อทายผลใหม่เรียบร้อยแล้ว!');
+        }
+        function resolveMarket(id, winner) {
+            const market = markets.find(m => m.id === id);
+            if (!market || market.status !== 'open') return;
+
+            if (!confirm(`ยืนยันการตัดสินให้ "${market.title}" จบลงที่ฝั่ง [ ${winner} ชนะ ] ใช่หรือไม่?`)) return;
+
+            market.status = winner;
+            localStorage.setItem('customMarkets', JSON.stringify(markets));
+
+            let usersDB = JSON.parse(localStorage.getItem('usersDB')) || {};
+            let totalPaidAllUsers = 0;
+            let winnerCount = 0;
+
+            Object.keys(usersDB).forEach(username => {
+                let user = usersDB[username];
+                if (user.history && Array.isArray(user.history)) {
+                    user.history.forEach(item => {
+                        if (item.title === market.title && !item.settled) {
+                            item.settled = true;
+                            if (item.choice === winner) {
+                                const prize = parseFloat(item.payout);
+                                user.balance += prize;
+                                totalPaidAllUsers += prize;
+                                winnerCount++;
+                                item.result = 'WIN';
+                            } else {
+                                item.result = 'LOSE';
+                            }
+                        }
+                    });
+                }
+            });
+
+            localStorage.setItem('usersDB', JSON.stringify(usersDB));
+
+            renderAdminMarkets();
+            alert(`ตัดสินผลเรียบร้อย! จ่ายเงินรางวัลให้ผู้ชนะทั้งหมด ${winnerCount} รายการ รวมเป็นเงิน $${totalPaidAllUsers.toFixed(2)}`);
+        }
+
+
+        function deleteMarket(id) {
+            if (!confirm('ต้องการลบหัวข้อนี้ใช่หรือไม่?')) return;
+            markets = markets.filter(m => m.id !== id);
+            localStorage.setItem('customMarkets', JSON.stringify(markets));
+            renderAdminMarkets();
+        }
+
+        function renderAdminMarkets() {
+            const listDiv = document.getElementById('adminMarketList');
+            listDiv.innerHTML = markets.map(m => `
+                <div class="market-item">
+                    <div>
+                        <strong>${m.title}</strong>
+                        <span class="badge">${m.category}</span>
+                        <div style="font-size: 12px; color: #8c95a6; margin-top: 4px;">
+                            ราคาปัจจุบัน: Yes ${m.yes}% | No ${100 - m.yes}% 
+                            ${m.status !== 'open' ? `<strong style="color:#f59e0b; margin-left:8px;">(จบเกม: ${m.status} ชนะ)</strong>` : ''}
+                        </div>
+                    </div>
+                    <div class="action-btns">
+                        ${m.status === 'open' ? `
+                            <button class="btn-win-yes" onclick="resolveMarket(${m.id}, 'Yes')">ตัดสิน Yes ชนะ</button>
+                            <button class="btn-win-no" onclick="resolveMarket(${m.id}, 'No')">ตัดสิน No ชนะ</button>
+                        ` : ''}
+                        <button class="btn-delete" onclick="deleteMarket(${m.id})">ลบ</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
