@@ -179,7 +179,51 @@
         <a href="javascript:void(0)" onclick="filterTopNav('tech', this)">เทคโนโลยี</a>
         <a href="javascript:void(0)" onclick="filterTopNav('all', this)">วัฒนธรรม</a>
     </div>
+<!-- แผงควบคุมแอดมินแบบพับเปิด-ปิดได้ (ซ่อนไว้สำหรับคนทั่วไป) -->
+<div id="inlineAdminPanel" style="display: none; max-width: 1200px; margin: 20px auto 0 auto; padding: 0 20px;">
+  <div style="background: #1c2028; border: 2px solid #f59e0b; border-radius: 12px; padding: 22px; box-shadow: 0 8px 25px rgba(245, 158, 11, 0.15);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid #2c323d; padding-bottom: 12px;">
+      <h3 style="color: #f59e0b; margin: 0; font-size: 18px;">🛠 แผงควบคุมผู้ดูแลระบบ (Admin Quick Panel)</h3>
+      <div style="display: flex; gap: 10px;">
+        <a href="admin.html" style="background: #2c323d; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; text-decoration: none;">เปิดหน้าเต็ม ↗</a>
+        <button onclick="toggleInlineAdmin()" style="background: rgba(239,68,68,0.2); color: #ef4444; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">✕ ซ่อนแผง</button>
+      </div>
+    </div>
 
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+      <!-- 1. สร้างหัวข้อทายผลใหม่ -->
+      <div style="background: #13161b; border: 1px solid #2c323d; border-radius: 8px; padding: 15px;">
+        <h4 style="color: #10b981; margin-bottom: 12px; font-size: 15px;">+ เปิดหัวข้อทายผลใหม่</h4>
+        <input type="text" id="quickMarketTitle" placeholder="คำถาม เช่น Bitcoin แตะ $150k ปีนี้?" style="width: 100%; background: #1c2028; border: 1px solid #2c323d; color: #fff; padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 10px;">
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <select id="quickMarketCat" style="flex: 1; background: #1c2028; border: 1px solid #2c323d; color: #fff; padding: 8px; border-radius: 6px; font-size: 13px;">
+            <option value="tech">เทคโนโลยี & AI</option>
+            <option value="politics">การเมือง</option>
+            <option value="game">เกม & Esports</option>
+            <option value="finance">การเงิน / Crypto</option>
+          </select>
+          <input type="number" id="quickMarketYes" value="50" min="1" max="99" placeholder="Yes %" style="width: 80px; background: #1c2028; border: 1px solid #2c323d; color: #fff; padding: 8px; border-radius: 6px; font-size: 13px;">
+        </div>
+        <button onclick="quickCreateMarket()" style="width: 100%; background: #2d7ff9; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">เปิดตลาดทันที</button>
+      </div>
+
+      <!-- 2. ตัดสินผลแพ้-ชนะ ตลาดที่เปิดอยู่ -->
+      <div style="background: #13161b; border: 1px solid #2c323d; border-radius: 8px; padding: 15px; max-height: 260px; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h4 style="color: #f59e0b; margin: 0; font-size: 15px;">⚖ ตัดสินผล & จ่ายรางวัล</h4>
+          <button onclick="loadQuickAdminData()" style="background: #2c323d; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">🔄</button>
+        </div>
+        <div id="quickMarketList" style="font-size: 13px; color: #8c95a6;">กำลังโหลด...</div>
+      </div>
+
+      <!-- 3. อ่าน Feedback ล่าสุด -->
+      <div style="background: #13161b; border: 1px solid #2c323d; border-radius: 8px; padding: 15px; max-height: 260px; overflow-y: auto;">
+        <h4 style="color: #2d7ff9; margin-bottom: 12px; font-size: 15px;">📩 ข้อความจากลูกค้า (Feedback)</h4>
+        <div id="quickFeedbackList" style="font-size: 13px; color: #8c95a6;">กำลังโหลด...</div>
+      </div>
+    </div>
+  </div>
+</div>
 
     <div class="container">
         <div class="featured-card">
@@ -1051,13 +1095,19 @@ setInterval(window.loadSupabaseMarkets, 15000);
                 sbProfile = data;
                        const balEl = document.getElementById('userBalance');
         if (balEl) balEl.innerText = Number(data.balance).toFixed(2);
-        const authBtn = document.getElementById('authBtn');
+               const authBtn = document.getElementById('authBtn');
         if (authBtn) {
+          const adminBtnHtml = data.is_admin
+            ? `<button onclick="toggleInlineAdmin()" style="background:#f59e0b; color:#000; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">🛠 จัดการแอดมิน</button>`
+            : '';
+
           authBtn.outerHTML = `
+            ${adminBtnHtml}
             <span style="color:#10b981;font-size:13px;font-weight:bold;">👤 ${data.display_name}</span>
             <button class="btn-login" style="color:#ef4444;font-size:12px;padding:6px 10px;" onclick="sbLogout()">ออก</button>
           `;
         }
+
 
             }
         }
@@ -1323,6 +1373,106 @@ setInterval(window.loadSupabaseMarkets, 15000);
 
   window.applyToggles = function() {
     refreshAllFilters();
+  };
+  // เปิด-ปิดแผงแอดมินบนหน้าหลัก
+  window.toggleInlineAdmin = function() {
+    const panel = document.getElementById('inlineAdminPanel');
+    if (!panel) return;
+    if (panel.style.display === 'none') {
+      panel.style.display = 'block';
+      loadQuickAdminData();
+    } else {
+      panel.style.display = 'none';
+    }
+  };
+
+  // โหลดข้อมูลตลาดและ Feedback เข้าแผงแอดมิน
+  window.loadQuickAdminData = async function() {
+    const mList = document.getElementById('quickMarketList');
+    const { data: markets } = await sb.from('markets').select('*').eq('status', 'open').order('created_at', { ascending: false });
+    if (mList) {
+      if (!markets || markets.length === 0) {
+        mList.innerHTML = '<p>ไม่มีตลาดที่รอตัดสินผล</p>';
+      } else {
+        mList.innerHTML = markets.map(m => {
+          const safeTitle = m.title.replace(/'/g, "\\'");
+          return `
+            <div style="border-bottom: 1px solid #262b34; padding: 8px 0;">
+              <div style="color: #fff; font-weight: bold; margin-bottom: 6px;">${m.title}</div>
+              <div style="display: flex; gap: 6px;">
+                <button onclick="quickResolveMarket('${m.id}', '${safeTitle}', 'Yes')" style="flex:1; background:#10b981; color:#000; border:none; padding:4px 8px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">Yes ชนะ</button>
+                <button onclick="quickResolveMarket('${m.id}', '${safeTitle}', 'No')" style="flex:1; background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">No ชนะ</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    const fList = document.getElementById('quickFeedbackList');
+    const { data: fbs } = await sb.from('feedbacks').select('*').order('created_at', { ascending: false }).limit(10);
+    if (fList) {
+      if (!fbs || fbs.length === 0) {
+        fList.innerHTML = '<p>ยังไม่มีข้อความจากลูกค้า</p>';
+      } else {
+        fList.innerHTML = fbs.map(fb => `
+          <div style="border-bottom: 1px solid #262b34; padding: 8px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:11px;">
+              <strong style="color:#2d7ff9;">[${fb.topic}] ${fb.sender_name}</strong>
+              <span style="color:${fb.status === 'resolved' ? '#10b981' : '#f59e0b'};">${fb.status === 'resolved' ? '✓ แล้ว' : 'รอตรวจ'}</span>
+            </div>
+            <div style="color:#e5e7eb; margin: 4px 0;">${fb.message}</div>
+            ${fb.status !== 'resolved' ? `<button onclick="quickResolveFb('${fb.id}')" style="background:#2c323d; color:#10b981; border:none; padding:3px 8px; border-radius:4px; font-size:11px; cursor:pointer;">✓ รับทราบแล้ว</button>` : ''}
+          </div>
+        `).join('');
+      }
+    }
+  };
+
+  // สร้างตลาดด่วนจากหน้าหลัก
+  window.quickCreateMarket = async function() {
+    const title = document.getElementById('quickMarketTitle').value.trim();
+    const category = document.getElementById('quickMarketCat').value;
+    const yes = parseInt(document.getElementById('quickMarketYes').value) || 50;
+    if (!title) return alert('กรุณากรอกหัวข้อคำถาม');
+
+    const { error } = await sb.from('markets').insert([{ title, category, yes_percent: yes, status: 'open' }]);
+    if (error) return alert('❌ ไม่มีสิทธิ์แอดมิน: ' + error.message);
+
+    document.getElementById('quickMarketTitle').value = '';
+    alert('✅ เปิดตลาดใหม่เรียบร้อย!');
+    loadQuickAdminData();
+    if (typeof window.loadSupabaseMarkets === 'function') window.loadSupabaseMarkets();
+  };
+
+  // ตัดสินผล & จ่ายรางวัลจากหน้าหลัก
+  window.quickResolveMarket = async function(id, title, winner) {
+    if (!confirm(`ยืนยันตัดสินให้ "${title}" ฝั่ง [ ${winner} ] ชนะ?`)) return;
+
+    const { error } = await sb.from('markets').update({ status: 'resolved', winner }).eq('id', id);
+    if (error) return alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+
+    const { data: winBets } = await sb.from('bets').select('*').eq('market_title', title).eq('choice', winner).eq('status', 'pending');
+    if (winBets) {
+      for (const bet of winBets) {
+        await sb.from('bets').update({ status: 'won' }).eq('id', bet.id);
+        const { data: prof } = await sb.from('profiles').select('balance').eq('id', bet.user_id).single();
+        if (prof) {
+          await sb.from('profiles').update({ balance: Number((Number(prof.balance) + Number(bet.payout)).toFixed(2)) }).eq('id', bet.user_id);
+        }
+      }
+    }
+    await sb.from('bets').update({ status: 'lost' }).eq('market_title', title).neq('choice', winner).eq('status', 'pending');
+
+    alert(`✅ ตัดสินผลเรียบร้อย! จ่ายรางวัลให้ผู้ชนะ ${winBets ? winBets.length : 0} รายการ`);
+    loadQuickAdminData();
+    refreshSupabaseUser();
+    if (typeof window.loadSupabaseMarkets === 'function') window.loadSupabaseMarkets();
+  };
+
+  window.quickResolveFb = async function(id) {
+    await sb.from('feedbacks').update({ status: 'resolved' }).eq('id', id);
+    loadQuickAdminData();
   };
 
 })();
