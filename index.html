@@ -907,6 +907,141 @@
     });
 })();
 </script>
+<!-- เชื่อมต่อฐานข้อมูลกลาง Supabase สำหรับหน้าเว็บหลัก -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function() {
+    const SUPABASE_URL = 'https://yzxaylzwgtpzqhfxmjqs.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_uGceFDQrnJP2ZGPoB_0NVw_TZgskFHU';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let sbUser = null;
+    let sbProfile = null;
+
+    // 1. ตรวจสอบสถานะล็อกอินและดึงยอดเงินจากฐานข้อมูลจริง
+    async function refreshSupabaseUser() {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session && session.user) {
+            sbUser = session.user;
+            const { data } = await sb.from('profiles').select('*').eq('id', sbUser.id).single();
+            if (data) {
+                sbProfile = data;
+                const balEl = document.getElementById('userBalance');
+                if (balEl) balEl.innerText = '$' + Number(data.balance).toFixed(2);
+                const navArea = document.getElementById('authButtonsArea');
+                if (navArea) {
+                    navArea.innerHTML = `
+                        <span style="color:#10b981;font-size:13px;font-weight:bold;">👤 ${data.display_name} ($${Number(data.balance).toFixed(2)})</span>
+                        <button class="btn-login" style="color:#ef4444;" onclick="sbLogout()">ออก</button>
+                    `;
+                }
+            }
+        }
+        loadRealLeaderboard();
+    }
+
+    window.sbLogout = async function() {
+        await sb.auth.signOut();
+        location.reload();
+    };
+
+    // 2. เชื่อมปุ่มสมัครสมาชิก / เข้าสู่ระบบเข้ากับ Supabase
+    const oldHandleAuth = window.handleAuth;
+    window.handleAuth = async function() {
+        const userInp = document.getElementById('authUsernameInput');
+        const passInp = document.getElementById('authPasswordInput');
+        const titleEl = document.getElementById('authModalTitle');
+        if (!userInp || !passInp) return;
+
+        const rawUser = userInp.value.trim();
+        const password = passInp.value.trim();
+        if (!rawUser || password.length < 6) {
+            alert('กรุณากรอกชื่อผู้ใช้ และรหัสผ่านอย่างน้อย 6 ตัวอักษร');
+            return;
+        }
+
+        const email = rawUser.includes('@') ? rawUser : `${rawUser.toLowerCase().replace(/[^a-z0-9]/g, '')}@hazardlab.app`;
+        const isRegister = titleEl && titleEl.innerText.includes('สมัคร');
+
+        if (isRegister) {
+            const { data, error } = await sb.auth.signUp({
+                email,
+                password,
+                options: { data: { display_name: rawUser } }
+            });
+            if (error) return alert('สมัครไม่สำเร็จ: ' + error.message);
+            alert('สมัครสมาชิกสำเร็จ! ได้รับโบนัสเริ่มต้น $1,000.00');
+        } else {
+            const { error } = await sb.auth.signInWithPassword({ email, password });
+            if (error) return alert('เข้าสู่ระบบไม่สำเร็จ: ' + error.message);
+        }
+
+        if (typeof closeAuthModal === 'function') closeAuthModal();
+        refreshSupabaseUser();
+    };
+
+    // 3. บันทึกรายการทายผลขึ้นฐานข้อมูลกลางเมื่อกดยืนยัน
+    const oldConfirmTrade = window.confirmTrade;
+    window.confirmTrade = async function() {
+        if (!sbUser || !sbProfile) {
+            alert('กรุณาเข้าสู่ระบบหรือสมัครสมาชิกก่อนวางเดิมพัน');
+            if (typeof openAuthModal === 'function') openAuthModal('login');
+            return;
+        }
+
+        const amtEl = document.getElementById('betAmount');
+        const titleEl = document.getElementById('modalTitle');
+        const choiceEl = document.getElementById('modalChoice');
+        const probEl = document.getElementById('modalProb');
+
+        const amount = parseFloat(amtEl ? amtEl.value : 0);
+        if (isNaN(amount) || amount <= 0 || amount > Number(sbProfile.balance)) {
+            alert('ยอดเงินไม่เพียงพอหรือจำนวนเงินไม่ถูกต้อง');
+            return;
+        }
+
+        const marketTitle = titleEl ? titleEl.innerText : 'ตลาดคาดการณ์';
+        const choice = choiceEl ? choiceEl.innerText : 'Yes';
+        const percent = parseInt(probEl ? probEl.innerText : '50') || 50;
+        const payout = Number((amount / (percent / 100)).toFixed(2));
+        const newBalance = Number((Number(sbProfile.balance) - amount).toFixed(2));
+
+        const { error: betErr } = await sb.from('bets').insert({
+            user_id: sbUser.id,
+            user_name: sbProfile.display_name,
+            market_title: marketTitle,
+            choice,
+            percent,
+            amount,
+            payout
+        });
+
+        if (betErr) return alert('เกิดข้อผิดพลาด: ' + betErr.message);
+
+        await sb.from('profiles').update({ balance: newBalance }).eq('id', sbUser.id);
+        alert(`✅ บันทึกรายการสำเร็จ! ลง ${choice} จำนวน $${amount} (รับ $${payout} หากชนะ)`);
+        if (typeof closeModal === 'function') closeModal();
+        refreshSupabaseUser();
+    };
+
+    // 4. อัปเดตตาราง Leaderboard จากผู้เล่นจริงทั้งระบบ
+    async function loadRealLeaderboard() {
+        const lb = document.getElementById('leaderboardList');
+        if (!lb) return;
+        const { data } = await sb.from('profiles').select('display_name, balance').order('balance', { ascending: false }).limit(5);
+        if (data && data.length > 0) {
+            lb.innerHTML = data.map((p, i) => `
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #262b34;font-size:13px;">
+                    <span>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1)} ${p.display_name}</span>
+                    <strong style="color:#10b981;">$${Number(p.balance).toFixed(2)}</strong>
+                </div>
+            `).join('');
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', refreshSupabaseUser);
+})();
+</script>
 
 </body>
 </html>
